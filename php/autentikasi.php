@@ -98,11 +98,10 @@ function redirectWithMessage($role)
     echo "<script>
             document.addEventListener('DOMContentLoaded', function() {
                 Swal.fire({
-                    icon: 'success',
+                    timerProgressBar: true,
                     title: 'Login Berhasil',
                     text: '$message',
-                    timer: 2000,
-                    timerProgressBar: true,
+                    timer: 1500,
                     didOpen: () => {
                         Swal.showLoading()
                     }

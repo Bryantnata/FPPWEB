@@ -1,9 +1,8 @@
-<!-- admin-dashboard.php -->
 <?php
 session_start();
 include "/laragon/www/FPPWEB/php/connect_db.php";
 
-// Cek apakah pengguna telah login dan apakah perannya adalah 'teknisi'
+// Cek apakah pengguna telah login dan apakah perannya adalah 'admin'
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') {
   header("Location: role.php");
   exit();
@@ -73,13 +72,8 @@ $totalSelesaiDiperbaiki = $rowSelesaiDiperbaiki['total'];
 mysqli_free_result($resultSelesaiDiperbaiki);
 
 
-// Query untuk mengambil data laporan barang
-$query = "SELECT b.id_barang AS ID_Barang, b.tanggal_input AS Tanggal_Masuk, p.nama AS Nama_Pemilik, b.nama_barang AS Nama_Barang, 
-b.merk_barang AS Merk_Barang, b.jenis_barang AS Tipe_barang, b.status 
-FROM barang b
-INNER JOIN pelanggan p ON b.id_pelanggan = p.id_pelanggan
-WHERE b.status IN ('Belum Diperbaiki', 'Sedang Diperbaiki', 'Selesai Diperbaiki')";
-
+// Query untuk mengambil data laporan barang dengan status terbaru dan dibatasi 10 row
+$query = "SELECT b.id_barang AS ID_Barang, b.tanggal_input AS Tanggal_Masuk, p.nama AS Nama_Pemilik, b.nama_barang AS Nama_Barang, b.merk_barang AS Merk_Barang, b.jenis_barang AS Tipe_barang, b.status FROM barang b INNER JOIN pelanggan p ON b.id_pelanggan = p.id_pelanggan WHERE b.status IN ('Belum Diperbaiki', 'Sedang Diperbaiki', 'Selesai Diperbaiki') ORDER BY CASE WHEN b.status = 'Selesai Diperbaiki' THEN b.status_updated_at ELSE b.tanggal_input END DESC, b.tanggal_input DESC LIMIT 10";
 $result = mysqli_query($link, $query);
 
 $barangList = [];
@@ -87,18 +81,18 @@ $barangList = [];
 if (!$result) {
   $error_message = mysqli_error($link);
   echo "<script>
-          setTimeout(function () {
-              Swal.fire({
-                  icon: 'error',
-                  title: 'Oops...',
-                  text: 'Query gagal dijalankan: " . addslashes($error_message) . "',
-                  background: '#1e3a8a', // bg-blue-950
-                  color: '#ffffff',
-                  showConfirmButton: true,
-                  confirmButtonText: 'OK'
-              });
-          }, 100);
-        </script>";
+            setTimeout(function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Query gagal dijalankan: " . addslashes($error_message) . "',
+                    background: '#1e3a8a', // bg-blue-950
+                    color: '#ffffff',
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK'
+                });
+            }, 100);
+          </script>";
 } else {
   // Memproses hasil query
   while ($row = mysqli_fetch_assoc($result)) {
@@ -213,7 +207,7 @@ mysqli_close($link);
             <h2 class="text-lg font-semibold mb-2">Selesai</h2>
             <!-- Tambahkan text-center untuk mengatur posisi horizontal ke tengah -->
             <p id="selesai-diperbaiki" class="text-3xl font-bold text-blue-800">
-            <?php echo $totalSelesaiDiperbaiki; ?>
+              <?php echo $totalSelesaiDiperbaiki; ?>
             </p>
           </div>
         </div>
@@ -228,7 +222,7 @@ mysqli_close($link);
     </div>
     <!-- Daftar Laporan Hari Ini-->
     <div class="mt-8">
-      <h2 class="text-lg font-semibold mb-4">Daftar Laporan Barang</h2>
+      <h2 class="text-lg font-semibold mb-4">Notifikasi Update Status</h2>
       <div class="overflow-x-auto">
         <table class="w-full bg-white border border-gray-400 rounded-lg">
           <thead>
@@ -276,12 +270,37 @@ mysqli_close($link);
             }
             ?>
           </tbody>
+        </table>
       </div>
     </div>
+  </div>
 </body>
 <script>
   function tambahBtn() {
     window.location.href = "/html/laporan.php"; // Ganti dengan path menuju halaman laporan.php yang benar
+  }
+  // Fungsi untuk logout
+  const logoutButton = document.getElementById("logoutBtn");
+  if (logoutButton) {
+    logoutButton.addEventListener("click", function(event) {
+      event.preventDefault(); // Mencegah aksi default dari anchor tag
+
+      // Tampilkan sweetalert2 dialog
+      Swal.fire({
+        title: "Apakah kamu yakin ingin keluar?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Ya, keluar",
+        cancelButtonText: "Batal",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Jika pengguna menekan tombol "Ya, keluar", arahkan ke halaman index.html
+          window.location.href = "/index.html";
+        }
+      });
+    });
   }
 </script>
 
