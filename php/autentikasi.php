@@ -1,74 +1,63 @@
 <?php
 session_start();
-include "connect_db.php"; // Ensure this file sets up the $link variable
+// Include file untuk koneksi ke database
+include "connect_db.php"; // Pastikan file ini mengatur variabel $link
 
-$role = $_POST['role'];
+// Require file konfigurasi untuk pepper
+require_once "../config/config.php"; // Pastikan file ini mengatur variabel $link dan config.php";
+
 $username = $_POST['username'];
 $password = $_POST['password'];
+$role = $_POST['role'];
 
-// Debugging
-error_log("Username: $username");
-error_log("Password: $password");
+// Hash password dengan pepper
+$password_peppered = hash_hmac("sha256", $password, PEPPER);
 
-// Check if $link is defined
-if (!isset($link)) {
-    redirectWithErrorMessage('database_error');
-    exit();
-}
-
-// Menggunakan prepared statement untuk menghindari SQL injection
-$query = "SELECT * FROM user WHERE username=? AND role=?";
+// Ambil hashed password dari database
+$query = "SELECT password, role FROM user WHERE username=?";
 $stmt = mysqli_prepare($link, $query);
-mysqli_stmt_bind_param($stmt, "ss", $username, $role);
+mysqli_stmt_bind_param($stmt, "s", $username);
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 
 if (mysqli_num_rows($result) > 0) {
     $row = mysqli_fetch_assoc($result);
-    if ($password === $row['password']) { // Menggunakan == karena belum di-hash
-        // Memeriksa apakah role yang dimiliki oleh pengguna adalah role yang valid
+    $hashed_password = $row['password'];
+    $user_role = $row['role'];
+
+    // Verifikasi password menggunakan password_verify
+    if (password_verify($password_peppered, $hashed_password)) {
+        // Check if the role is valid
         $valid_roles = ['admin', 'kasir', 'teknisi'];
-        if (!in_array($row['role'], $valid_roles)) {
+        if (!in_array($user_role, $valid_roles)) {
             redirectWithErrorMessage('invalid_role');
         }
 
-        // Password sesuai, mulai session
+        // Password cocok, mulai session
         $_SESSION['username'] = $username;
-        $_SESSION['role'] = $row['role'];
+        $_SESSION['role'] = $user_role;
 
-        // Redirect berdasarkan peran
-        switch ($role) {
+        // Redirect berdasarkan role
+        switch ($user_role) {
             case 'admin':
-                if ($row['role'] === 'admin') {
-                    redirectWithMessage('admin');
-                } else {
-                    redirectWithErrorMessage('invalid_role');
-                }
+                redirectWithMessage('admin');
                 break;
             case 'kasir':
-                if ($row['role'] === 'kasir') {
-                    redirectWithMessage('kasir');
-                } else {
-                    redirectWithErrorMessage('invalid_role');
-                }
+                redirectWithMessage('kasir');
                 break;
             case 'teknisi':
-                if ($row['role'] === 'teknisi') {
-                    redirectWithMessage('teknisi');
-                } else {
-                    redirectWithErrorMessage('invalid_role');
-                }
+                redirectWithMessage('teknisi');
                 break;
             default:
                 redirectWithErrorMessage('invalid_role');
                 break;
         }
     } else {
-        // Password tidak sesuai
+        // Password tidak cocok
         redirectWithErrorMessage('invalid_credentials');
     }
 } else {
-    // User tidak ditemukan
+    // Username tidak ditemukan
     redirectWithErrorMessage('invalid_credentials');
 }
 
@@ -77,8 +66,6 @@ mysqli_close($link);
 
 function redirectWithMessage($role)
 {
-    $dashboardUrl = '';
-
     switch ($role) {
         case 'admin':
             $dashboardUrl = '/html/admin-Dashboard.php';
@@ -91,6 +78,10 @@ function redirectWithMessage($role)
         case 'teknisi':
             $dashboardUrl = '/html/teknisi-Dashboard.php';
             $message = 'Anda akan dialihkan ke Dashboard Teknisi';
+            break;
+        default:
+            $dashboardUrl = '/';
+            $message = 'Redirect tidak valid';
             break;
     }
 
@@ -115,17 +106,12 @@ function redirectWithMessage($role)
 
 function redirectWithErrorMessage($errorType)
 {
-    global $link; // Ensure $link is accessible
-    $errorMessage = '';
     switch ($errorType) {
         case 'invalid_role':
             $errorMessage = 'Role tidak valid. Silakan hubungi administrator.';
             break;
         case 'invalid_credentials':
             $errorMessage = 'Username atau Password salah';
-            break;
-        case 'database_error':
-            $errorMessage = 'Kesalahan Database: ' . mysqli_error($link);
             break;
         default:
             $errorMessage = 'Terjadi kesalahan. Silakan coba lagi.';
@@ -142,7 +128,7 @@ function redirectWithErrorMessage($errorType)
                     timer: 3000,
                     timerProgressBar: true
                 }).then(() => {
-                    window.location.href = '/html/login.php?error=" . urlencode($errorType) . "';
+                    window.history.back();
                 });
             });
           </script>";

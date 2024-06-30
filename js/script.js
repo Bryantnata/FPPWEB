@@ -30,4 +30,29 @@ function validateForm() {
   return true;
 }
 
+function tambahBtn() {
+  window.location.href = "/html/laporan.php"; // Ganti dengan path menuju halaman laporan.php yang benar
+}
+// Fungsi untuk logout
+const logoutButton = document.getElementById("logoutBtn");
+if (logoutButton) {
+  logoutButton.addEventListener("click", function(event) {
+    event.preventDefault(); // Mencegah aksi default dari anchor tag
 
+    // Tampilkan sweetalert2 dialog
+    Swal.fire({
+      title: "Apakah kamu yakin ingin keluar?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Ya, keluar",
+      cancelButtonText: "Batal",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Jika pengguna menekan tombol "Ya, keluar", arahkan ke halaman index.html
+        window.location.href = "/index.html";
+      }
+    });
+  });
+}

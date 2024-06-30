@@ -2,7 +2,7 @@
 session_start();
 include "/laragon/www/FPPWEB/php/connect_db.php";
 
-// Cek apakah pengguna telah login dan apakah perannya adalah 'teknisi'
+// Cek apakah pengguna telah login dan apakah perannya adalah 'kasir'
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'kasir') {
   header("Location: role.php");
   exit();
@@ -73,7 +73,73 @@ mysqli_free_result($resultSelesaiDiperbaiki);
 
 
 // Query untuk mengambil data laporan barang dengan status terbaru dan dibatasi 10 row
-$query = "SELECT b.id_barang AS ID_Barang, b.tanggal_input AS Tanggal_Masuk, p.nama AS Nama_Pemilik, b.nama_barang AS Nama_Barang, b.merk_barang AS Merk_Barang, b.jenis_barang AS Tipe_barang, b.status FROM barang b INNER JOIN pelanggan p ON b.id_pelanggan = p.id_pelanggan WHERE b.status IN ('Belum Diperbaiki', 'Sedang Diperbaiki', 'Selesai Diperbaiki') ORDER BY CASE WHEN b.status = 'Selesai Diperbaiki' THEN b.status_updated_at ELSE b.tanggal_input END DESC, b.tanggal_input DESC LIMIT 10";
+$query = "
+SELECT 
+    b.ID_Service AS ID_Service, 
+    b.tanggal_input AS Tanggal_Masuk, 
+    p.nama AS Nama_Pemilik, 
+    b.nama_barang AS Nama_Barang, 
+    b.merk_barang AS Merk_Barang, 
+    p.no_hp AS no_hp,
+    b.status,
+    b.keluhan_barang AS Deskripsi_Keluhan,
+    b.hubungi_kondisi,
+    dk.deskripsi AS Deskripsi,
+    dk.kondisi AS Kondisi,
+    dk.keterangan_awal AS Keterangan_Awal,
+    dk.konfirmasi_keterangan AS Penjelasan,
+    dk.keterangan_akhir AS Keterangan_Akhir
+FROM 
+    barang b 
+INNER JOIN 
+    pelanggan p ON b.id_pelanggan = p.id_pelanggan 
+LEFT JOIN 
+    detail_keluhan dk ON b.ID_Service = dk.id_barang
+WHERE 
+    (b.status IN ('Belum Diperbaiki', 'Sedang Diperbaiki'))
+    AND DATEDIFF(CURDATE(), b.tanggal_input) >= 3
+    AND b.hubungi_kondisi = 'Belum'
+ORDER BY 
+    b.tanggal_input ASC
+";
+
+$queryPengambilan = "
+SELECT 
+    b.ID_Service AS ID_Service, 
+    b.tanggal_input AS Tanggal_Masuk, 
+    p.nama AS Nama_Pemilik, 
+    b.nama_barang AS Nama_Barang, 
+    b.merk_barang AS Merk_Barang, 
+    p.no_hp AS no_hp,
+    b.status,
+    dk.keterangan_awal AS Keterangan_Awal,
+    dk.konfirmasi_keterangan AS Penjelasan,
+    dk.keterangan_akhir AS Keterangan_Akhir,
+    b.hubungi_ambil
+FROM 
+    barang b 
+INNER JOIN 
+    pelanggan p ON b.id_pelanggan = p.id_pelanggan 
+LEFT JOIN 
+    detail_keluhan dk ON b.ID_Service = dk.id_barang
+WHERE 
+    b.status = 'Selesai Diperbaiki'
+ORDER BY 
+    b.status_updated_at DESC
+";
+
+$resultPengambilan = mysqli_query($link, $queryPengambilan);
+
+if (!$resultPengambilan) {
+  die("ERROR " . mysqli_error($link));
+}
+
+$barangListPengambilan = [];
+while ($row = mysqli_fetch_assoc($resultPengambilan)) {
+  $barangListPengambilan[] = $row;
+}
+mysqli_free_result($resultPengambilan);
+
 $result = mysqli_query($link, $query);
 
 $barangList = [];
@@ -113,14 +179,14 @@ mysqli_close($link);
   <title>Kasir</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="/js/script.js"></script>
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css'>
 </head>
 
 <body class="bg-gray-100">
   <!-- Sidebar -->
   <aside class="sidebar bg-gray-800 text-gray-400 w-64 min-h-screen fixed top-0 left-0 z-50">
     <!-- Logo -->
-    <div class="flex items-center justify-center h-20 mb-4">
+    <div class="flex items-center justify-center h-20 mt-4 mb-4">
       <img src="/assets/logopweb.png" alt="Logo" class="h-16 w-auto" />
       <!-- Mengurangi tinggi logo agar tidak terlalu besar -->
     </div>
@@ -128,7 +194,7 @@ mysqli_close($link);
     <nav class="mt-4">
       <ul>
         <li>
-          <a href="/html/kasir-Dashboard.html" class="block py-2 px-4 hover:bg-gray-700 active:bg-blue-500" id="dashboardBtn">Dashboard</a>
+          <a href="/html/kasir-Dashboard.html" class="block py-2 px-4 text-gray-800 bg-gray-500" id="dashboardBtn">Dashboard</a>
         </li>
         <li>
           <a href="/html/kasir-Transaksi.html" class="block py-2 px-4 hover:bg-gray-700" id="transaksiBtn">Transaksi</a>
@@ -157,17 +223,9 @@ mysqli_close($link);
         <!-- Tambahkan kelas h-full untuk membuat tinggi kontainer penuh -->
         <div class="py-4 bg-white rounded-lg shadow-md p-4 border border-gray-200 flex items-center justify-center">
           <div>
-            <h2 class="text-lg font-semibold mb-2">Barang Masuk</h2>
+            <h2 class="text-lg font-semibold mb-2">Konfirmasi Pelanggan</h2>
             <p id="total-laporan" class="text-3xl font-bold text-red-500">
               <?php echo count($barangList); ?>
-            </p>
-          </div>
-        </div>
-        <div class="py-4 bg-white rounded-lg shadow-md p-4 border border-gray-200 flex items-center justify-center">
-          <div>
-            <h2 class="text-lg font-semibold mb-2">Barang Keluar</h2>
-            <p id="AngkbrgKeluar" class="text-3xl font-bold text-green-500">
-              <?php echo $totalBarangKeluar; ?>
             </p>
           </div>
         </div>
@@ -194,91 +252,196 @@ mysqli_close($link);
         <div class="py-4 bg-white rounded-lg shadow-md p-4 border border-gray-200 flex items-center justify-center flex-col">
           <!-- Tambahkan flex-col untuk mengatur posisi vertikal ke tengah -->
           <div>
-            <h2 class="text-lg font-semibold mb-2">On-Proses</h2>
-            <!-- Tambahkan text-center untuk mengatur posisi horizontal ke tengah -->
-            <p id="sedang-diperbaiki" class="text-3xl font-bold text-yellow-500">
-              <?php echo $totalSedangDiperbaiki; ?>
-            </p>
-          </div>
-        </div>
-        <div class="py-4 bg-white rounded-lg shadow-md p-4 border border-gray-200 flex items-center justify-center flex-col">
-          <!-- Tambahkan flex-col untuk mengatur posisi vertikal ke tengah -->
-          <div>
             <h2 class="text-lg font-semibold mb-2">Selesai</h2>
             <!-- Tambahkan text-center untuk mengatur posisi horizontal ke tengah -->
-            <p id="selesai-diperbaiki" class="text-3xl font-bold text-blue-800">
+            <p id="sedang-diperbaiki" class="text-3xl font-bold text-yellow-500">
               <?php echo $totalSelesaiDiperbaiki; ?>
             </p>
           </div>
         </div>
       </div>
     </div>
-
     <!-- Tombol Tambah Barang -->
     <div class="flex justify-end mt-4">
       <button type="button" onclick="tambahBtn()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
         Tambah Barang
       </button>
     </div>
-    <!-- Daftar Laporan Hari Ini-->
+    <!-- Daftar Laporan  -->
     <div class="mt-8">
-      <h2 class="text-lg font-semibold mb-4">Notifikasi Update Status</h2>
+      <h2 class="text-lg font-semibold mb-4">Laporan Pemberitahuan</h2>
       <div class="overflow-x-auto">
         <table class="w-full bg-white border border-gray-400 rounded-lg">
           <thead>
             <tr class="divide-x divide-gray-400">
               <th class="px-4 py-2">No</th>
-              <th class="px-4 py-2">ID barang</th>
-              <th class="px-4 py-2">Tanggal Masuk</th>
+              <th class="px-4 py-2">ID Service</th>
               <th class="px-4 py-2">Nama Pemilik</th>
               <th class="px-4 py-2">Nama Barang</th>
-              <th class="px-4 py-2">Merk Barang</th>
-              <th class="px-4 py-2">Jenis Barang</th>
+              <th class="px-4 py-2">No. Hp</th>
+              <th class="px-4 py-2">Keterangan</th>
+              <th class="px-4 py-2">Kondisi</th>
               <th class="px-4 py-2">Status</th>
             </tr>
           </thead>
           <tbody id="barangList">
             <?php
-            $no = 1; // Initialize row number variable
+            $no = 1;
+            $page = isset($_GET['page_status']) ? (int)$_GET['page_status'] : 1;
+            $maxLaporan = 5;
+            $offset = ($page - 1) * $maxLaporan;
+            $totalPages = ceil(count($barangList) / $maxLaporan);
+            $paginatedList = array_slice($barangList, $offset, $maxLaporan);
 
-            if (count($barangList) > 0) {
-              foreach ($barangList as $row) {
+            if (count($paginatedList) > 0) {
+              foreach ($paginatedList as $row) {
                 $status = $row["status"];
+                $kondisi = $row["Kondisi_Keluhan"] ?? 'Belum diperiksa'; // Default jika kosong
 
                 // Apply styles based on status
                 $statusClass = match ($status) {
                   'Belum Diperbaiki' => 'bg-red-800 text-white font-bold',
                   'Sedang Diperbaiki' => 'bg-orange-700 text-white font-bold',
-                  'Selesai Diperbaiki' => 'bg-green-500 text-white font-bold',
                   default => '',
                 };
 
-                echo "<tr class='hover:bg-gray-50'>";
+                echo "<tr class='hover:bg-gray-50' data-id='" . $row["ID_Service"] . "'>";
                 echo "<td class='border px-4 py-2 border-gray-400 text-center'>" . $no . "</td>";
-                echo "<td class='border px-4 py-2 border-gray-400 text-center'>" . $row["ID_Barang"] . "</td>";
-                echo "<td class='border px-4 py-2 border-gray-400 text-center'>" . $row["Tanggal_Masuk"] . "</td>";
+                echo "<td class='border px-4 py-2 border-gray-400 text-center'>" . $row["ID_Service"] . "</td>";
                 echo "<td class='border px-4 py-2 border-gray-400'>" . $row["Nama_Pemilik"] . "</td>";
                 echo "<td class='border px-4 py-2 border-gray-400'>" . $row["Nama_Barang"] . "</td>";
-                echo "<td class='border px-4 py-2 border-gray-400'>" . $row["Merk_Barang"] . "</td>";
-                echo "<td class='border px-4 py-2 border-gray-400'>" . $row["Tipe_barang"] . "</td>";
+                echo "<td class='border px-4 py-2 border-gray-400 text-center'>";
+                echo "<button class='show-contact' data-nama='" . $row["Nama_Pemilik"] . "' data-nohp='" . $row["no_hp"] . "' data-description='" . $row["Keterangan_Awal"] . "' data-id='" . $row["ID_Service"] . "' data-type='pemberitahuan'>";
+                echo "<i class='fas fa-envelope'></i></button>";
+                echo "</td>";
+                echo "<td class='border px-4 py-2 border-gray-400 text-center'>";
+                if (!empty($row["Keterangan_Awal"])) {
+                  echo "<button class='show-description-with-options' 
+                  data-description='" . htmlspecialchars($row["Keterangan_Awal"], ENT_QUOTES) . "' 
+                  data-id='" . $row["ID_Service"] . "' 
+                  data-konfirmasi='" . htmlspecialchars($row["Penjelasan"], ENT_QUOTES) . "'
+                  data-hubungi='belum'>";
+                  echo "<i class='fas fa-file-alt'></i></button>";
+                } else {
+                  echo "-";
+                }
+                echo "</td>";
+                echo "<td class='border px-4 py-2 border-gray-400 text-center'>" . $kondisi . "</td>";
                 echo "<td class='border px-4 py-2 border-gray-400 text-center $statusClass'>" . $status . "</td>";
                 echo "</tr>";
                 $no++;
               }
             } else {
-              echo "<tr><td colspan='8' class='px-4 py-2 text-center'>Tidak ada data barang.</td></tr>";
+              echo "<tr><td colspan='8' class='px-4 py-2 text-center'>Tidak ada data barang yang perlu dihubungi.</td></tr>";
             }
             ?>
           </tbody>
         </table>
+        <!-- Pagination -->
+        <div class="mt-4 flex justify-center">
+          <nav class="inline-flex">
+            <?php if ($page > 1) : ?>
+              <a href="?page_status=<?php echo $page - 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Previous</a>
+            <?php endif; ?>
+            <?php for ($i = 1; $i <= $totalPages; $i++) : ?>
+              <a href="?page_status=<?php echo $i; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300 <?php if ($i == $page) echo 'bg-gray-300'; ?>"><?php echo $i; ?></a>
+            <?php endfor; ?>
+            <?php if ($page < $totalPages) : ?>
+              <a href="?page_status=<?php echo $page + 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Next</a>
+            <?php endif; ?>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+    <!-- Laporan Pengambilan -->
+    <div class="mt-8">
+      <h2 class="text-lg font-semibold mb-4">Laporan Pengambilan</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full bg-white border border-gray-400 rounded-lg">
+          <thead>
+            <tr class="divide-x divide-gray-400">
+              <th class="px-4 py-2">No</th>
+              <th class="px-4 py-2">ID Service</th>
+              <th class="px-4 py-2">Nama Pemilik</th>
+              <th class="px-4 py-2">Nama Barang</th>
+              <th class="px-4 py-2">No. Hp</th>
+              <th class="px-4 py-2">Keterangan</th>
+              <th class="px-4 py-2">Kondisi</th>
+              <th class="px-4 py-2">Status</th>
+              <th class="px-4 py-2">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="barangListPengambilan">
+            <?php
+            $no = 1;
+            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+            $maxLaporan = 5;
+            $offset = ($page - 1) * $maxLaporan;
+            $totalPages = ceil(count($barangListPengambilan) / $maxLaporan);
+            $paginatedList = array_slice($barangListPengambilan, $offset, $maxLaporan);
+
+            if (count($paginatedList) > 0) {
+              foreach ($paginatedList as $row) {
+                $hubungiAmbilClass = $row["hubungi_ambil"] == 'Sudah' ? 'bg-white' : 'bg-pink-200';
+
+                echo "<tr class='hover:bg-gray-50' data-id='" . $row["ID_Service"] . "'>";
+                echo "<td class='border px-4 py-2 border-gray-400 text-center'>" . $no . "</td>";
+                echo "<td class='border px-4 py-2 border-gray-400 text-center'>" . $row["ID_Service"] . "</td>";
+                echo "<td class='border px-4 py-2 border-gray-400'>" . $row["Nama_Pemilik"] . "</td>";
+                echo "<td class='border px-4 py-2 border-gray-400'>" . $row["Nama_Barang"] . "</td>";
+                echo "<td class='border px-4 py-2 border-gray-400 text-center $hubungiAmbilClass'>";
+                echo "<button class='show-contact' data-nama='" . $row["Nama_Pemilik"] . "' data-nohp='" . $row["no_hp"] . "' data-description='" . $row["Keterangan_Akhir"] . "' data-id='" . $row["ID_Service"] . "' data-type='pengambilan'>";
+                echo "<i class='fas fa-envelope'></i></button>";
+                echo "</td>";
+                echo "<td class='border px-4 py-2 border-gray-400 text-center'>";
+                if (!empty($row["Keterangan_Akhir"])) {
+                  echo "<button class='show-description' data-description='" . htmlspecialchars($row["Keterangan_Akhir"], ENT_QUOTES) . "'>";
+                  echo "<i class='fas fa-file-alt'></i></button>";
+                } else {
+                  echo "-";
+                }
+                echo "</td>";
+                echo "<td class='border px-4 py-2 border-gray-400 text-center'>" . (isset($row["Kondisi"]) ? $row["Kondisi"] : 'Belum Diperiksa') . "</td>";
+                echo "<td class='border px-4 py-2 border-gray-400 text-center bg-green-500 text-white font-bold'>" . $row["status"] . "</td>";
+                echo "<td class='border py-2 border-gray-400 text-center'>";
+                if ($row["hubungi_ambil"] == 'Sudah') {
+                  echo "<button class='confirm-pickup bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded' data-id='" . $row["ID_Service"] . "'>Konfirmasi Pengambilan</button>";
+                }
+                echo "</td>";
+                echo "</tr>";
+                $no++;
+              }
+            } else {
+              echo "<tr><td colspan='9' class='px-4 py-2 text-center'>Tidak ada data barang yang siap diambil.</td></tr>";
+            }
+            ?>
+          </tbody>
+        </table>
+        <!-- Pagination -->
+        <div class="mt-4 flex justify-center">
+          <nav class="inline-flex">
+            <?php if ($page > 1) : ?>
+              <a href="?page=<?php echo $page - 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Previous</a>
+            <?php endif; ?>
+            <?php for ($i = 1; $i <= $totalPages; $i++) : ?>
+              <a href="?page=<?php echo $i; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300 <?php if ($i == $page) echo 'bg-gray-300'; ?>"><?php echo $i; ?></a>
+            <?php endfor; ?>
+            <?php if ($page < $totalPages) : ?>
+              <a href="?page=<?php echo $page + 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Next</a>
+            <?php endif; ?>
+          </nav>
+        </div>
       </div>
     </div>
   </div>
 </body>
+
 <script>
   function tambahBtn() {
     window.location.href = "/html/laporan.php"; // Ganti dengan path menuju halaman laporan.php yang benar
   }
+
   // Fungsi untuk logout
   const logoutButton = document.getElementById("logoutBtn");
   if (logoutButton) {
@@ -302,6 +465,246 @@ mysqli_close($link);
       });
     });
   }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.show-contact').forEach(function(button) {
+      button.addEventListener('click', function() {
+        var nama = this.getAttribute('data-nama');
+        var noHp = this.getAttribute('data-nohp');
+        var description = this.getAttribute('data-description');
+        var id = this.getAttribute('data-id');
+        var type = this.getAttribute('data-type');
+        var row = this.closest('tr');
+
+        function showPopup() {
+          Swal.fire({
+            title: 'Kontak Pemilik',
+            html: `
+            <div class="text-left">
+              <p class="font-bold">Nama:</p>
+              <p>${nama}</p>
+              <p class="font-bold">Nomor HP:</p>
+              <p>${noHp}</p>
+              <p class="font-bold">Deskripsi:</p>
+              <div class="border p-2 rounded-md">${description}</div>
+            </div>
+          `,
+            showCancelButton: true,
+            showDenyButton: true,
+            confirmButtonText: 'Hubungi via WhatsApp',
+            denyButtonText: 'Sudah Dihubungi',
+            cancelButtonText: 'Tutup',
+            customClass: {
+              popup: 'rounded-lg shadow-lg p-6',
+              title: 'text-lg font-semibold',
+              htmlContainer: 'text-gray-700',
+              confirmButton: 'bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded',
+              denyButton: 'bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded',
+              cancelButton: 'bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded'
+            }
+          }).then((result) => {
+            if (result.isConfirmed) {
+              if (!noHp.startsWith('62')) {
+                noHp = '62' + noHp.slice(1);
+              }
+              var whatsappUrl = `https://wa.me/${noHp}`;
+              window.open(whatsappUrl, '_blank');
+              showPopup(); // Tampilkan popup lagi setelah membuka WhatsApp
+            } else if (result.isDenied) {
+              if (type === 'pemberitahuan') {
+                updateHubungiKondisi(id);
+                row.querySelector('.show-description-with-options').setAttribute('data-hubungi', 'sudah');
+                Swal.fire('Kontak telah dihubungi!', '', 'success');
+              } else {
+                updateHubungiAmbil(id, row);
+              }
+            }
+          });
+        }
+        showPopup(); // Panggil fungsi untuk menampilkan popup
+      });
+    });
+
+    document.querySelectorAll('.kirim-konfirmasi').forEach(function(button) {
+      button.addEventListener('click', function() {
+        var id = this.getAttribute('data-id');
+        var select = this.previousElementSibling;
+        var konfirmasi = select.value;
+
+        if (konfirmasi === '') {
+          Swal.fire('Error', 'Silakan pilih konfirmasi terlebih dahulu', 'error');
+          return;
+        }
+
+        fetch('/php/update_konfirmasi_keterangan.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'id=' + id + '&konfirmasi=' + konfirmasi
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              Swal.fire('Sukses', 'Konfirmasi keterangan berhasil diupdate', 'success');
+            } else {
+              Swal.fire('Error', 'Gagal mengupdate konfirmasi keterangan', 'error');
+            }
+          });
+      });
+    });
+
+    function updateHubungiAmbil(id, row) {
+    fetch('/php/update_hubungi_ambil.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'id=' + id
+      }).then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          Swal.fire('Kontak telah dihubungi!', '', 'success').then(() => {
+            row.querySelector('td:nth-child(5)').classList.remove('bg-pink-200');
+            row.querySelector('td:nth-child(5)').classList.add('bg-white');
+            row.querySelector('td:last-child').innerHTML = "<button class='confirm-pickup bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded' data-id='" + id + "'>Konfirmasi Pengambilan</button>";
+            addConfirmPickupListener(row.querySelector('.confirm-pickup'));
+          });
+        } else {
+          Swal.fire('Error!', 'Gagal mengupdate status.', 'error');
+        }
+      });
+    }
+    function updateHubungiStatus(button) {
+      button.setAttribute('data-hubungi', 'sudah');
+    }
+
+    function updateHubungiKondisi(id) {
+      fetch('/php/update_hubungi_kondisi.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: 'id=' + id
+        }).then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            var contactButton = document.querySelector(`.show-contact[data-id="${id}"]`);
+            if (contactButton) {
+              updateHubungiStatus(contactButton);
+            }
+          } else {
+            Swal.fire('Error!', 'Gagal mengupdate status.', 'error');
+          }
+        });
+    }
+
+    document.querySelectorAll('.show-description-with-options').forEach(function(button) {
+      button.addEventListener('click', function() {
+        var description = this.getAttribute('data-description');
+        var id = this.getAttribute('data-id');
+        var currentKonfirmasi = this.getAttribute('data-konfirmasi');
+
+        Swal.fire({
+          title: 'Konfirmasi',
+          html: `
+        <div class="text-left border p-2 rounded-md mb-4">${description}</div>
+        <div class="mt-4">
+          <label for="konfirmasi" class="block mb-2">Konfirmasi Keterangan:</label>
+          <select id="konfirmasi" class="w-full p-2 border rounded">
+            <option value="Eksekusi" ${currentKonfirmasi === 'Eksekusi' ? 'selected' : ''}>Eksekusi</option>
+            <option value="Jangan Dieksekusi" ${currentKonfirmasi === 'Jangan Dieksekusi' ? 'selected' : ''}>Jangan Dieksekusi</option>
+          </select>
+        </div>
+      `,
+          showCancelButton: true,
+          confirmButtonText: 'Kirim',
+          cancelButtonText: 'Tutup',
+          customClass: {
+            popup: 'rounded-lg shadow-lg p-6',
+            title: 'text-lg font-semibold',
+            htmlContainer: 'text-gray-700',
+            confirmButton: 'bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded',
+            cancelButton: 'bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded'
+          },
+          preConfirm: () => {
+            const konfirmasi = Swal.getPopup().querySelector('#konfirmasi').value;
+            if (!konfirmasi) {
+              Swal.showValidationMessage('Silakan pilih konfirmasi');
+            }
+            return {
+              konfirmasi: konfirmasi
+            };
+          }
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Cek apakah pelanggan sudah dihubungi
+            var contactButton = this.closest('tr').querySelector('.show-contact');
+            var hubungi = contactButton.getAttribute('data-hubungi') || 'belum';
+
+            if (hubungi === 'belum') {
+              Swal.fire({
+                title: 'Peringatan',
+                text: 'Anda belum menghubungi Pelanggan',
+                icon: 'warning',
+                confirmButtonText: 'OK'
+              });
+            } else {
+              updateKonfirmasiKeterangan(id, result.value.konfirmasi);
+              removeRowAfterDelay(this.closest('tr'));
+            }
+          }
+        });
+      });
+    });
+
+    document.querySelectorAll('.show-description').forEach(function(button) {
+      button.addEventListener('click', function() {
+        var description = this.getAttribute('data-description');
+
+        Swal.fire({
+          title: 'Deskripsi Perbaikan',
+          html: `<div class="text-left border p-2 rounded-md">${description}</div>`,
+          confirmButtonText: 'Tutup',
+          customClass: {
+            popup: 'rounded-lg shadow-lg p-6',
+            title: 'text-lg font-semibold',
+            htmlContainer: 'text-gray-700',
+            confirmButton: 'bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded'
+          }
+        });
+      });
+    });
+
+    function updateKonfirmasiKeterangan(id, konfirmasi) {
+      fetch('/php/update_konfirmasi_keterangan.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: 'id=' + id + '&konfirmasi=' + konfirmasi
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire('Sukses', 'Konfirmasi keterangan berhasil diupdate', 'success').then(() => {
+              // Update the data-konfirmasi attribute of the button
+              document.querySelector(`.show-description-with-options[data-id="${id}"]`).setAttribute('data-konfirmasi', konfirmasi);
+            });
+          } else {
+            Swal.fire('Error', 'Gagal mengupdate konfirmasi keterangan', 'error');
+          }
+        });
+    }
+
+    function removeRowAfterDelay(row) {
+      setTimeout(() => {
+        row.remove();
+      }, 5000); // Hapus baris setelah 5 detik
+    }
+  });
 </script>
+
+
 
 </html>

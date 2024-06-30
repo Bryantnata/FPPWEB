@@ -10,7 +10,7 @@
 
 <body class="flex justify-center items-center h-screen bg-blue-950">
   <div class="flex flex-col justify-center items-center space-y-4">
-    <form name="loginForm" onsubmit="return validateForm()" action="/php/autentikasi.php" method="post" class="bg-blue-900 opacity-80 p-8 rounded-lg shadow-lg w-96">
+    <form name="loginForm" onsubmit="return validateForm(event)" action="/php/autentikasi.php" method="post" class="bg-blue-900 opacity-80 p-8 rounded-lg shadow-lg w-96">
       <button onclick="goRole()" type="button" class="text-white hover:text-red-500 font-semibold focus:outline-none">
         Kembali
       </button>
@@ -35,29 +35,35 @@
   </div>
   <script>
     function goRole() {
-      window.location.href = 'role.php'; // Ganti dengan halaman yang sesuai
+      window.location.href = 'role.php'; // Replace with the appropriate page
     }
 
-    function validateForm() {
+    function validateForm(event) {
+      event.preventDefault(); // Prevent default form submission
+
       let isValid = true;
-      const username = document.getElementById('id').value;
-      const password = document.getElementById('password').value;
-      document.getElementById('common-error').classList.add('hidden');
-      document.getElementById('id-error').textContent = '';
-      document.getElementById('password-error').textContent = '';
+      const username = document.getElementById('id').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const idError = document.getElementById('id-error');
+      const passwordError = document.getElementById('password-error');
+
+      idError.textContent = '';
+      passwordError.textContent = '';
 
       if (username === '') {
-        document.getElementById('id-error').textContent = 'ID tidak boleh kosong';
+        idError.textContent = 'ID tidak boleh kosong';
         isValid = false;
       }
       if (password === '') {
-        document.getElementById('password-error').textContent = 'Password tidak boleh kosong';
+        passwordError.textContent = 'Password tidak boleh kosong';
         isValid = false;
       }
-      if (!isValid) {
-        document.getElementById('common-error').textContent = 'Ada kesalahan dalam formulir Anda';
-        document.getElementById('common-error').classList.remove('hidden');
+
+      if (isValid) {
+        // If valid, submit the form
+        document.loginForm.submit();
       }
+
       return isValid;
     }
   </script>

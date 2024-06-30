@@ -73,7 +73,7 @@ mysqli_free_result($resultSelesaiDiperbaiki);
 
 
 // Query untuk mengambil data laporan barang dengan status terbaru dan dibatasi 10 row
-$query = "SELECT b.id_barang AS ID_Barang, b.tanggal_input AS Tanggal_Masuk, p.nama AS Nama_Pemilik, b.nama_barang AS Nama_Barang, b.merk_barang AS Merk_Barang, b.jenis_barang AS Tipe_barang, b.status FROM barang b INNER JOIN pelanggan p ON b.id_pelanggan = p.id_pelanggan WHERE b.status IN ('Belum Diperbaiki', 'Sedang Diperbaiki', 'Selesai Diperbaiki') ORDER BY CASE WHEN b.status = 'Selesai Diperbaiki' THEN b.status_updated_at ELSE b.tanggal_input END DESC, b.tanggal_input DESC LIMIT 10";
+$query = "SELECT b.ID_Service AS ID_Service, b.tanggal_input AS Tanggal_Masuk, p.nama AS Nama_Pemilik, b.nama_barang AS Nama_Barang, b.merk_barang AS Merk_Barang, b.jenis_barang AS Tipe_barang, b.status FROM barang b INNER JOIN pelanggan p ON b.id_pelanggan = p.id_pelanggan WHERE b.status IN ('Belum Diperbaiki', 'Sedang Diperbaiki', 'Selesai Diperbaiki') ORDER BY CASE WHEN b.status = 'Selesai Diperbaiki' THEN b.status_updated_at ELSE b.tanggal_input END DESC, b.tanggal_input DESC LIMIT 10";
 $result = mysqli_query($link, $query);
 
 $barangList = [];
@@ -159,7 +159,7 @@ mysqli_close($link);
           <div>
             <h2 class="text-lg font-semibold mb-2">Barang Masuk</h2>
             <p id="total-laporan" class="text-3xl font-bold text-red-500">
-              <?php echo count($barangList); ?>
+              <?php echo ($totalBarangMasuk); ?>
             </p>
           </div>
         </div>
@@ -275,33 +275,6 @@ mysqli_close($link);
     </div>
   </div>
 </body>
-<script>
-  function tambahBtn() {
-    window.location.href = "/html/laporan.php"; // Ganti dengan path menuju halaman laporan.php yang benar
-  }
-  // Fungsi untuk logout
-  const logoutButton = document.getElementById("logoutBtn");
-  if (logoutButton) {
-    logoutButton.addEventListener("click", function(event) {
-      event.preventDefault(); // Mencegah aksi default dari anchor tag
-
-      // Tampilkan sweetalert2 dialog
-      Swal.fire({
-        title: "Apakah kamu yakin ingin keluar?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Ya, keluar",
-        cancelButtonText: "Batal",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // Jika pengguna menekan tombol "Ya, keluar", arahkan ke halaman index.html
-          window.location.href = "/index.html";
-        }
-      });
-    });
-  }
-</script>
+<script src="../js/script.js"></script>
 
 </html>
