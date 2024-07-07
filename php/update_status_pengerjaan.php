@@ -1,13 +1,12 @@
 <?php
-include "/laragon/www/FPPWEB/php/connect_db.php";
+include "connect_db.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $id = $_POST['id'];
-    $konfirmasi = $_POST['konfirmasi'];
 
-    $query = "UPDATE detail_keluhan SET konfirmasi_keterangan = ? WHERE ID_Service = ?";
+    $query = "UPDATE barang SET status = 'Sedang Diperbaiki' WHERE ID_Service = ?";
     $stmt = mysqli_prepare($link, $query);
-    mysqli_stmt_bind_param($stmt, "si", $konfirmasi, $id);
+    mysqli_stmt_bind_param($stmt, "i", $id);
 
     if (mysqli_stmt_execute($stmt)) {
         echo json_encode(["success" => true]);
@@ -20,3 +19,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 } else {
     echo json_encode(["success" => false, "error" => "Invalid request method"]);
 }
+?>

@@ -208,7 +208,7 @@
       formData.append('id_pelanggan', selectedCustomerId);
     }
 
-    fetch('/php/submit_laporan.php', {
+    fetch('../php/submit_laporan.php', {
         method: 'POST',
         body: formData
       })

@@ -84,7 +84,6 @@ SELECT
     b.status,
     b.keluhan_barang AS Deskripsi_Keluhan,
     b.hubungi_kondisi,
-    dk.deskripsi AS Deskripsi,
     dk.kondisi AS Kondisi,
     dk.keterangan_awal AS Keterangan_Awal,
     dk.konfirmasi_keterangan AS Penjelasan,
@@ -94,14 +93,21 @@ FROM
 INNER JOIN 
     pelanggan p ON b.id_pelanggan = p.id_pelanggan 
 LEFT JOIN 
-    detail_keluhan dk ON b.ID_Service = dk.id_barang
+    detail_keluhan dk ON b.ID_Service = dk.ID_Service
 WHERE 
-    (b.status IN ('Belum Diperbaiki', 'Sedang Diperbaiki'))
-    AND DATEDIFF(CURDATE(), b.tanggal_input) >= 3
-    AND b.hubungi_kondisi = 'Belum'
+    (
+        (b.status IN ('Belum Diperbaiki', 'Sedang Diperbaiki'))
+        AND (
+            DATEDIFF(CURDATE(), b.tanggal_input) >= 3
+            OR dk.kondisi = 'bisa diperbaiki'
+        )
+        AND b.hubungi_kondisi = 'Belum'
+    )
 ORDER BY 
     b.tanggal_input ASC
 ";
+
+
 
 $queryPengambilan = "
 SELECT 
@@ -115,15 +121,17 @@ SELECT
     dk.keterangan_awal AS Keterangan_Awal,
     dk.konfirmasi_keterangan AS Penjelasan,
     dk.keterangan_akhir AS Keterangan_Akhir,
-    b.hubungi_ambil
+    dk.kondisi AS Kondisi,
+    b.hubungi_ambil,
+    b.dikembalikan
 FROM 
     barang b 
 INNER JOIN 
     pelanggan p ON b.id_pelanggan = p.id_pelanggan 
 LEFT JOIN 
-    detail_keluhan dk ON b.ID_Service = dk.id_barang
+    detail_keluhan dk ON b.ID_Service = dk.ID_Service
 WHERE 
-    b.status = 'Selesai Diperbaiki'
+    b.status = 'Selesai Diperbaiki' OR b.dikembalikan = 'Sudah'
 ORDER BY 
     b.status_updated_at DESC
 ";
@@ -194,16 +202,16 @@ mysqli_close($link);
     <nav class="mt-4">
       <ul>
         <li>
-          <a href="/html/kasir-Dashboard.html" class="block py-2 px-4 text-gray-800 bg-gray-500" id="dashboardBtn">Dashboard</a>
+          <a href="/html/kasir-Dashboard.php" class="block py-2 px-4 text-gray-800 bg-gray-500" id="dashboardBtn">Dashboard</a>
         </li>
         <li>
-          <a href="/html/kasir-Transaksi.html" class="block py-2 px-4 hover:bg-gray-700" id="transaksiBtn">Transaksi</a>
+          <a href="/html/kasir-Transaksi.php" class="block py-2 px-4 hover:bg-gray-700" id="transaksiBtn">Transaksi</a>
         </li>
         <li>
-          <a href="/html/kasir-Pembayaran.html" class="block py-2 px-4 hover:bg-gray-700" id="pembayaranBtn">Pembayaran</a>
+          <a href="/html/kasir-Pembayaran.php" class="block py-2 px-4 hover:bg-gray-700" id="pembayaranBtn">Pembayaran</a>
         </li>
         <li>
-          <a href="/html/kasir-Riwayat.html" class="block py-2 px-4 hover:bg-gray-700" id="riwayatBtn">Riwayat</a>
+          <a href="/html/kasir-Riwayat.php" class="block py-2 px-4 hover:bg-gray-700" id="riwayatBtn">Riwayat</a>
         </li>
       </ul>
     </nav>
@@ -319,13 +327,14 @@ mysqli_close($link);
                   echo "<button class='show-description-with-options' 
                   data-description='" . htmlspecialchars($row["Keterangan_Awal"], ENT_QUOTES) . "' 
                   data-id='" . $row["ID_Service"] . "' 
-                  data-konfirmasi='" . htmlspecialchars($row["Penjelasan"], ENT_QUOTES) . "'
+                  data-konfirmasi=''
                   data-hubungi='belum'>";
                   echo "<i class='fas fa-file-alt'></i></button>";
                 } else {
                   echo "-";
                 }
                 echo "</td>";
+
                 echo "<td class='border px-4 py-2 border-gray-400 text-center'>" . $kondisi . "</td>";
                 echo "<td class='border px-4 py-2 border-gray-400 text-center $statusClass'>" . $status . "</td>";
                 echo "</tr>";
@@ -555,26 +564,27 @@ mysqli_close($link);
     });
 
     function updateHubungiAmbil(id, row) {
-    fetch('/php/update_hubungi_ambil.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'id=' + id
-      }).then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          Swal.fire('Kontak telah dihubungi!', '', 'success').then(() => {
-            row.querySelector('td:nth-child(5)').classList.remove('bg-pink-200');
-            row.querySelector('td:nth-child(5)').classList.add('bg-white');
-            row.querySelector('td:last-child').innerHTML = "<button class='confirm-pickup bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded' data-id='" + id + "'>Konfirmasi Pengambilan</button>";
-            addConfirmPickupListener(row.querySelector('.confirm-pickup'));
-          });
-        } else {
-          Swal.fire('Error!', 'Gagal mengupdate status.', 'error');
-        }
-      });
+      fetch('/php/update_hubungi_ambil.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: 'id=' + id
+        }).then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire('Kontak telah dihubungi!', '', 'success').then(() => {
+              row.querySelector('td:nth-child(5)').classList.remove('bg-pink-200');
+              row.querySelector('td:nth-child(5)').classList.add('bg-white');
+              row.querySelector('td:last-child').innerHTML = "<button class='confirm-pickup bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded' data-id='" + id + "'>Konfirmasi Pengambilan</button>";
+              addConfirmPickupListener(row.querySelector('.confirm-pickup'));
+            });
+          } else {
+            Swal.fire('Error!', 'Gagal mengupdate status.', 'error');
+          }
+        });
     }
+
     function updateHubungiStatus(button) {
       button.setAttribute('data-hubungi', 'sudah');
     }
@@ -603,7 +613,7 @@ mysqli_close($link);
       button.addEventListener('click', function() {
         var description = this.getAttribute('data-description');
         var id = this.getAttribute('data-id');
-        var currentKonfirmasi = this.getAttribute('data-konfirmasi');
+        var currentKonfirmasi = this.getAttribute('data-konfirmasi') || ''; // Tambahkan nilai default jika kosong
 
         Swal.fire({
           title: 'Konfirmasi',
@@ -651,9 +661,15 @@ mysqli_close($link);
               });
             } else {
               updateKonfirmasiKeterangan(id, result.value.konfirmasi);
-              removeRowAfterDelay(this.closest('tr'));
             }
           }
+        });
+      });
+      // Tambahkan event listener untuk tombol Konfirmasi Pengambilan
+      document.querySelectorAll('.confirm-pickup').forEach(function(button) {
+        button.addEventListener('click', function() {
+          const id = this.getAttribute('data-id');
+          konfirmasiPengambilan(id);
         });
       });
     });
@@ -688,20 +704,44 @@ mysqli_close($link);
         .then(data => {
           if (data.success) {
             Swal.fire('Sukses', 'Konfirmasi keterangan berhasil diupdate', 'success').then(() => {
-              // Update the data-konfirmasi attribute of the button
-              document.querySelector(`.show-description-with-options[data-id="${id}"]`).setAttribute('data-konfirmasi', konfirmasi);
+              // Hapus baris terkait dari tabel
+              const row = document.querySelector(`tr[data-id="${id}"]`);
+              if (row) {
+                row.remove();
+              }
             });
           } else {
             Swal.fire('Error', 'Gagal mengupdate konfirmasi keterangan', 'error');
           }
         });
     }
-
-    function removeRowAfterDelay(row) {
-      setTimeout(() => {
-        row.remove();
-      }, 5000); // Hapus baris setelah 5 detik
+    // Tambahkan fungsi konfirmasiPengambilan
+    function konfirmasiPengambilan(id) {
+      Swal.fire({
+        title: 'Konfirmasi Pengambilan',
+        text: "Apakah Anda yakin ingin mengkonfirmasi pengambilan barang ini?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ya, konfirmasi',
+        cancelButtonText: 'Batal'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Redirect ke halaman nota
+          window.location.href = `/html/nota.php?id=${id}`;
+        }
+      });
     }
+    
+    // Fungsi untuk menambahkan event listener ke tombol Konfirmasi Pengambilan yang baru
+    function addConfirmPickupListener(button) {
+      button.addEventListener('click', function() {
+        const id = this.getAttribute('data-id');
+        konfirmasiPengambilan(id);
+      });
+    }
+
   });
 </script>
 
