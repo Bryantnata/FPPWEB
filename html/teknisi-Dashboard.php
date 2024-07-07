@@ -142,13 +142,7 @@ mysqli_close($link);
           <a href="/html/teknisi-Dashboard.php" class="block py-2 px-4 text-gray-800 bg-gray-500" id="dashboardBtn">Dashboard</a>
         </li>
         <li>
-          <a href="/html/teknisi-Transaksi.html" class="block py-2 px-4 hover:bg-gray-700" id="transaksiBtn">Transaksi</a>
-        </li>
-        <li>
-          <a href="/html/teknisi-Pembayaran.html" class="block py-2 px-4 hover:bg-gray-700" id="pembayaranBtn">Pembayaran</a>
-        </li>
-        <li>
-          <a href="/html/teknisi-Riwayat.html" class="block py-2 px-4 hover:bg-gray-700" id="riwayatBtn">Riwayat</a>
+          <a href="/html/teknisi-Riwayat.php" class="block py-2 px-4 hover:bg-gray-700" id="riwayatBtn">Riwayat</a>
         </li>
       </ul>
     </nav>
@@ -169,7 +163,7 @@ mysqli_close($link);
         <div class="py-4 bg-white rounded-lg shadow-md p-4 border border-gray-200 flex items-center justify-center">
           <div>
             <h2 class="text-lg font-semibold mb-2">Periksa</h2>
-            <p id="total-laporan" class="text-3xl font-bold text-red-500">
+            <p id="total-laporan" class="text-3xl font-bold text-green-500">
               <?php echo $totalPeriksa; ?>
             </p>
           </div>
@@ -209,7 +203,7 @@ mysqli_close($link);
           <div>
             <h2 class="text-lg font-semibold mb-2">Dibatalkan</h2>
             <!-- Tambahkan text-center untuk mengatur posisi horizontal ke tengah -->
-            <p id="sedang-diperbaiki" class="text-3xl font-bold text-yellow-500">
+            <p id="sedang-diperbaiki" class="text-3xl font-bold text-blue-500">
               <?php echo $totalDibatalkan; ?>
             </p>
           </div>
@@ -221,17 +215,17 @@ mysqli_close($link);
     <div class="mt-8">
       <h2 class="text-lg font-semibold mb-4">Periksa</h2>
       <div class="overflow-x-auto">
-        <table class="w-full bg-white border border-gray-400 rounded-lg">
+        <table class="w-full border-collapse border border-gray-400">
           <thead>
-            <tr>
-              <th class="px-4 py-2 border border-gray-400">No</th>
-              <th class="px-4 py-2 border border-gray-400">ID Service</th>
-              <th class="px-4 py-2 border border-gray-400">Tanggal Masuk</th>
-              <th class="px-4 py-2 border border-gray-400">Nama Barang</th>
-              <th class="px-4 py-2 border border-gray-400">Merk Barang</th>
-              <th class="px-4 py-2 border border-gray-400">Tipe</th>
-              <th class="px-4 py-2 border border-gray-400">Keluhan</th>
-              <th class="px-4 py-2 border border-gray-400">Aksi</th>
+            <tr class="bg-gray-200">
+              <th class="ppx-4 py-2 border">No</th>
+              <th class="px-4 py-2 border">ID Service</th>
+              <th class="px-4 py-2 border ">Tanggal Masuk</th>
+              <th class="px-4 py-2 border ">Nama Barang</th>
+              <th class="px-4 py-2 border ">Merk Barang</th>
+              <th class="px-4 py-2 border ">Tipe</th>
+              <th class="px-4 py-2 border ">Keluhan</th>
+              <th class="px-4 py-2 border ">Aksi</th>
             </tr>
           </thead>
 
@@ -246,19 +240,19 @@ mysqli_close($link);
 
             if (empty($paginatedBarangPeriksa)) : ?>
               <tr>
-                <td colspan="9" class="px-4 py-2 border border-gray-400 text-center">Tidak ada laporan.</td>
+                <td colspan="9" class="px-4 py-2 border  text-center">Tidak ada laporan.</td>
               </tr>
               <?php else :
               foreach ($paginatedBarangPeriksa as $index => $row) : ?>
                 <tr>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $index + 1; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['ID_Service']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['tanggal_input']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['nama_barang']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['merk_barang']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['jenis_barang']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['keluhan_barang']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400">
+                  <td class="px-4 py-2 border "><?php echo $index + 1; ?></td>
+                  <td class="px-4 py-2 border "><?php echo $row['ID_Service']; ?></td>
+                  <td class="px-4 py-2 border "><?php echo $row['tanggal_input']; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['nama_barang']; ?></td>
+                  <td class="px-4 py-2 border "><?php echo $row['merk_barang']; ?></td>
+                  <td class="px-4 py-2 border "><?php echo $row['jenis_barang']; ?></td>
+                  <td class="px-4 py-2 border "><?php echo $row['keluhan_barang']; ?></td>
+                  <td class="px-4 py-2 border text-center">
                     <button class="confirm-analisis bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded" data-id="<?php echo $row['ID_Service']; ?>" data-keluhan="<?php echo htmlspecialchars($row['keluhan_barang']); ?>">
                       Kirim Analisis
                     </button>
@@ -275,7 +269,7 @@ mysqli_close($link);
               <a href="?page_periksa=<?php echo $pagePeriksa - 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Previous</a>
             <?php endif; ?>
             <?php for ($i = 1; $i <= $totalPagesPeriksa; $i++) : ?>
-              <a href="?page_periksa=<?php echo $i; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300 <?php if ($i == $pagePeriksa) echo 'bg-gray-300'; ?>"><?php echo $i; ?></a>
+              <a href="?page_periksa=<?php echo $i; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300 <?php if ($i == $pagePeriksa) ; ?>"><?php echo $i; ?></a>
             <?php endfor; ?>
             <?php if ($pagePeriksa < $totalPagesPeriksa) : ?>
               <a href="?page_periksa=<?php echo $pagePeriksa + 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Next</a>
@@ -289,18 +283,18 @@ mysqli_close($link);
     <div class="mt-8">
       <h2 class="text-lg font-semibold mb-4">Laporan Belum Dikerjakan</h2>
       <div class="overflow-x-auto">
-        <table class="w-full bg-white border border-gray-400 rounded-lg">
+        <table class="w-full border-collapse border border-gray-400">
           <thead>
-            <tr>
-              <th class="px-4 py-2 border border-gray-400">No</th>
-              <th class="px-4 py-2 border border-gray-400">ID Service</th>
-              <th class="px-4 py-2 border border-gray-400">Tanggal Masuk</th>
-              <th class="px-4 py-2 border border-gray-400">Nama Barang</th>
-              <th class="px-4 py-2 border border-gray-400">Merk Barang</th>
-              <th class="px-4 py-2 border border-gray-400">Tipe</th>
-              <th class="px-4 py-2 border border-gray-400">Keluhan</th>
-              <th class="px-4 py-2 border border-gray-400">Keterangan</th>
-              <th class="px-4 py-2 border border-gray-400">Aksi</th>
+            <tr class="bg-gray-200">
+              <th class="px-4 py-2 border">No</th>
+              <th class="px-4 py-2 border">ID Service</th>
+              <th class="px-4 py-2 border">Tanggal Masuk</th>
+              <th class="px-4 py-2 border">Nama Barang</th>
+              <th class="px-4 py-2 border">Merk Barang</th>
+              <th class="px-4 py-2 border">Tipe</th>
+              <th class="px-4 py-2 border">Keluhan</th>
+              <th class="px-4 py-2 border">Keterangan</th>
+              <th class="px-4 py-2 border">Aksi</th>
             </tr>
           </thead>
           <tbody id="barangListBelumPengerjaan">
@@ -314,20 +308,20 @@ mysqli_close($link);
 
             if (empty($paginatedBarangBelumPengerjaan)) : ?>
               <tr>
-                <td colspan="9" class="px-4 py-2 border border-gray-400 text-center">Tidak ada laporan.</td>
+                <td colspan="9" class="px-4 py-2 border text-center">Tidak ada laporan.</td>
               </tr>
               <?php else :
               foreach ($paginatedBarangBelumPengerjaan as $index => $row) : ?>
                 <tr>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $index + 1; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['ID_Service']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['tanggal_input']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['nama_barang']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['merk_barang']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['jenis_barang']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['keluhan_barang']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['keterangan_awal']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400">
+                  <td class="px-4 py-2 border"><?php echo $index + 1; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['ID_Service']; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['tanggal_input']; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['nama_barang']; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['merk_barang']; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['jenis_barang']; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['keluhan_barang']; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['keterangan_awal']; ?></td>
+                  <td class="px-4 py-2 border text-center">
                     <button class="confirm-belumdikerjakan bg-orange-500 hover:bg-orange-700 text-white font-bold py-1 px-2 rounded" data-id="<?php echo $row['ID_Service']; ?>">
                       Perbaiki
                     </button>
@@ -345,7 +339,7 @@ mysqli_close($link);
                 <a href="?page_BelumPengerjaan=<?php echo $pageBelumPengerjaan - 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Previous</a>
               <?php endif; ?>
               <?php for ($i = 1; $i <= $totalPagesBelumPengerjaan; $i++) : ?>
-                <a href="?page_BelumPengerjaan=<?php echo $i; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300 <?php if ($i == $pageBelumPengerjaan) echo 'bg-gray-300'; ?>"><?php echo $i; ?></a>
+                <a href="?page_BelumPengerjaan=<?php echo $i; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300 <?php if ($i == $pageBelumPengerjaan); ?>"><?php echo $i; ?></a>
               <?php endfor; ?>
               <?php if ($pageBelumPengerjaan < $totalPagesBelumPengerjaan) : ?>
                 <a href="?page_BelumPengerjaan=<?php echo $pageBelumPengerjaan + 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Next</a>
@@ -360,18 +354,18 @@ mysqli_close($link);
     <div class="mt-8">
       <h2 class="text-lg font-semibold mb-4">Laporan Pengerjaaan</h2>
       <div class="overflow-x-auto">
-        <table class="w-full bg-white border border-gray-400 rounded-lg">
+        <table class="w-full border-collapse border border-gray-400">
           <thead>
-            <tr>
-              <th class="px-4 py-2 border border-gray-400">No</th>
-              <th class="px-4 py-2 border border-gray-400">ID Service</th>
-              <th class="px-4 py-2 border border-gray-400">Tanggal Masuk</th>
-              <th class="px-4 py-2 border border-gray-400">Nama Barang</th>
-              <th class="px-4 py-2 border border-gray-400">Merk Barang</th>
-              <th class="px-4 py-2 border border-gray-400">Tipe</th>
-              <th class="px-4 py-2 border border-gray-400">Keluhan</th>
-              <th class="px-4 py-2 border border-gray-400">Keterangan</th>
-              <th class="px-4 py-2 border border-gray-400">Aksi</th>
+            <tr class="bg-gray-200">
+              <th class="px-4 py-2 border">No</th>
+              <th class="px-4 py-2 border">ID Service</th>
+              <th class="px-4 py-2 border">Tanggal Masuk</th>
+              <th class="px-4 py-2 border">Nama Barang</th>
+              <th class="px-4 py-2 border">Merk Barang</th>
+              <th class="px-4 py-2 border">Tipe</th>
+              <th class="px-4 py-2 border">Keluhan</th>
+              <th class="px-4 py-2 border">Keterangan</th>
+              <th class="px-4 py-2 border">Aksi</th>
             </tr>
           </thead>
           <tbody id="barangListPengerjaan">
@@ -385,20 +379,20 @@ mysqli_close($link);
 
             if (empty($paginatedBarangPengerjaan)) : ?>
               <tr>
-                <td colspan="9" class="px-4 py-2 border border-gray-400 text-center">Tidak ada laporan.</td>
+                <td colspan="9" class="px-4 py-2 border text-center">Tidak ada laporan.</td>
               </tr>
               <?php else :
               foreach ($paginatedBarangPengerjaan as $index => $row) : ?>
                 <tr>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $index + 1; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['ID_Service']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['tanggal_input']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['nama_barang']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['merk_barang']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['jenis_barang']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['keluhan_barang']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['keterangan_awal']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400">
+                  <td class="px-4 py-2 border"><?php echo $index + 1; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['ID_Service']; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['tanggal_input']; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['nama_barang']; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['merk_barang']; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['jenis_barang']; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['keluhan_barang']; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['keterangan_awal']; ?></td>
+                  <td class="px-4 py-2 border text-center">
                     <button class="confirm-pengerjaan bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded" data-id="<?php echo $row['ID_Service']; ?>">
                       Selesai
                     </button>
@@ -415,7 +409,7 @@ mysqli_close($link);
               <a href="?page_Pengerjaan=<?php echo $pagePengerjaan - 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Previous</a>
             <?php endif; ?>
             <?php for ($i = 1; $i <= $totalPagesPengerjaan; $i++) : ?>
-              <a href="?page_Pengerjaan=<?php echo $i; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300 <?php if ($i == $pagePengerjaan) echo 'bg-gray-300'; ?>"><?php echo $i; ?></a>
+              <a href="?page_Pengerjaan=<?php echo $i; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300 <?php if ($i == $pagePengerjaan) ; ?>"><?php echo $i; ?></a>
             <?php endfor; ?>
             <?php if ($pagePengerjaan < $totalPagesPengerjaan) : ?>
               <a href="?page_Pengerjaan=<?php echo $pagePengerjaan + 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Next</a>
@@ -429,9 +423,9 @@ mysqli_close($link);
     <div class="mt-8">
       <h2 class="text-lg font-semibold mb-4">Laporan Dibatalkan</h2>
       <div class="overflow-x-auto">
-        <table class="w-full bg-white border border-gray-400 rounded-lg">
+        <table class="w-full border-collapse border border-gray-400">
           <thead>
-            <tr>
+            <tr class="bg-gray-200">
               <th class="px-4 py-2">No</th>
               <th class="px-4 py-2">ID Service</th>
               <th class="px-4 py-2">Tanggal Masuk</th>
@@ -454,20 +448,20 @@ mysqli_close($link);
 
             if (empty($paginatedBarangDibatalkan)) : ?>
               <tr>
-                <td colspan="9" class="px-4 py-2 border border-gray-400 text-center">Tidak ada laporan.</td>
+                <td colspan="9" class="px-4 py-2 border text-center">Tidak ada laporan.</td>
               </tr>
               <?php else :
               foreach ($paginatedBarangDibatalkan as $index => $row) : ?>
                 <tr>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $index + 1 + $offsetDibatalkan; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['ID_Service']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['tanggal_input']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400"><?php echo $row['nama_barang']; ?></td>
-                  <th class="px-4 py-2 border border-gray-400"><?php echo $row['merk_barang']; ?></td>
-                  <th class="px-4 py-2 border border-gray-400"><?php echo $row['jenis_barang']; ?></td>
-                  <th class="px-4 py-2 border border-gray-400"><?php echo $row['keluhan_barang']; ?></td>
-                  <th class="px-4 py-2 border border-gray-400"><?php echo $row['konfirmasi_keterangan']; ?></td>
-                  <td class="px-4 py-2 border border-gray-400">
+                  <td class="px-4 py-2 border"><?php echo $index + 1 + $offsetDibatalkan; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['ID_Service']; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['tanggal_input']; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['nama_barang']; ?></td>
+                  <th class="px-4 py-2 border"><?php echo $row['merk_barang']; ?></td>
+                  <th class="px-4 py-2 border"><?php echo $row['jenis_barang']; ?></td>
+                  <th class="px-4 py-2 border"><?php echo $row['keluhan_barang']; ?></td>
+                  <th class="px-4 py-2 border"><?php echo $row['konfirmasi_keterangan']; ?></td>
+                  <td class="px-4 py-2 border text-center">
                     <button class="confirm-dikembalikan bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded" data-id="<?php echo $row['ID_Service']; ?>">
                       Dikembalikan
                     </button>
@@ -484,7 +478,7 @@ mysqli_close($link);
               <a href="?page_dibatalkan=<?php echo $pageDibatalkan - 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Previous</a>
             <?php endif; ?>
             <?php for ($i = 1; $i <= $totalPagesDibatalkan; $i++) : ?>
-              <a href="?page_dibatalkan=<?php echo $i; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300 <?php if ($i == $pageDibatalkan) echo 'bg-gray-300'; ?>"><?php echo $i; ?></a>
+              <a href="?page_dibatalkan=<?php echo $i; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300 <?php if ($i == $pageDibatalkan); ?>"><?php echo $i; ?></a>
             <?php endfor; ?>
             <?php if ($pageDibatalkan < $totalPagesDibatalkan) : ?>
               <a href="?page_dibatalkan=<?php echo $pageDibatalkan + 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Next</a>
@@ -686,80 +680,80 @@ mysqli_close($link);
         kembalikanBarang(id, button, result.value);
       }
     });
-  
 
-  function kembalikanBarang(id) {
-    fetch('/php/kembalikan_barang.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'id=' + id
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
+
+    function kembalikanBarang(id) {
+      fetch('/php/kembalikan_barang.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: 'id=' + id
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire(
+              'Berhasil!',
+              'Barang telah dikembalikan.',
+              'success'
+            ).then(() => {
+              // Hapus baris dari tabel
+              const row = document.querySelector(`#barangListDibatalkan tr[data-id="${id}"]`);
+              if (row) {
+                row.remove();
+              }
+
+              // Periksa apakah tabel sudah kosong
+              const tbody = document.querySelector('#barangListDibatalkan');
+              if (tbody.children.length === 0) {
+                // Jika tabel kosong, tambahkan baris "Tidak ada data"
+                const noDataRow = document.createElement('tr');
+                noDataRow.innerHTML = '<td colspan="9" class="px-4 py-2 text-center">Tidak ada data barang yang dibatalkan.</td>';
+                tbody.appendChild(noDataRow);
+              }
+
+              // Opsional: Update nomor urut
+              updateRowNumbers();
+            });
+          } else {
+            Swal.fire(
+              'Gagal!',
+              'Terjadi kesalahan saat mengembalikan barang.',
+              'error'
+            );
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
           Swal.fire(
-            'Berhasil!',
-            'Barang telah dikembalikan.',
-            'success'
-          ).then(() => {
-            // Hapus baris dari tabel
-            const row = document.querySelector(`#barangListDibatalkan tr[data-id="${id}"]`);
-            if (row) {
-              row.remove();
-            }
-
-            // Periksa apakah tabel sudah kosong
-            const tbody = document.querySelector('#barangListDibatalkan');
-            if (tbody.children.length === 0) {
-              // Jika tabel kosong, tambahkan baris "Tidak ada data"
-              const noDataRow = document.createElement('tr');
-              noDataRow.innerHTML = '<td colspan="9" class="px-4 py-2 text-center">Tidak ada data barang yang dibatalkan.</td>';
-              tbody.appendChild(noDataRow);
-            }
-
-            // Opsional: Update nomor urut
-            updateRowNumbers();
-          });
-        } else {
-          Swal.fire(
-            'Gagal!',
-            'Terjadi kesalahan saat mengembalikan barang.',
+            'Error!',
+            'Terjadi kesalahan pada server.',
             'error'
           );
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        Swal.fire(
-          'Error!',
-          'Terjadi kesalahan pada server.',
-          'error'
-        );
-      });
-  }
-
-  // Fungsi untuk mengupdate nomor urut
-  function updateRowNumbers() {
-    const rows = document.querySelectorAll('#barangPeriksa tr');
-    rows.forEach((row, index) => {
-      const firstCell = row.querySelector('td:first-child');
-      if (firstCell) {
-        firstCell.textContent = index + 1;
-      }
-    });
-  }
-
-  // Fungsi untuk mengupdate total periksa
-  function updateTotalPeriksa() {
-    const totalElement = document.querySelector('#total-laporan');
-    const rows = document.querySelectorAll('#barangPeriksa tr');
-    const total = rows.length;
-    if (totalElement) {
-      totalElement.textContent = total;
+        });
     }
-  }
+
+    // Fungsi untuk mengupdate nomor urut
+    function updateRowNumbers() {
+      const rows = document.querySelectorAll('#barangPeriksa tr');
+      rows.forEach((row, index) => {
+        const firstCell = row.querySelector('td:first-child');
+        if (firstCell) {
+          firstCell.textContent = index + 1;
+        }
+      });
+    }
+
+    // Fungsi untuk mengupdate total periksa
+    function updateTotalPeriksa() {
+      const totalElement = document.querySelector('#total-laporan');
+      const rows = document.querySelectorAll('#barangPeriksa tr');
+      const total = rows.length;
+      if (totalElement) {
+        totalElement.textContent = total;
+      }
+    }
   }
 </script>
 

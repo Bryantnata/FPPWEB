@@ -160,7 +160,7 @@ $is_lunas = $row_barang['status'] === 'Lunas';
           Lunas
         </button>
       <?php endif; ?>
-      <a href="<?php echo $from === 'riwayat' ? '/html/kasir-Riwayat.php' : '/html/kasir-Pembayaran.php'; ?>" 
+      <a href="<?php echo $from === 'riwayat' ? '/html/kasir-Riwayat.php'  : '/html/kasir-Pembayaran.php' ; ?>" 
        class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
         Kembali
     </a>

@@ -57,16 +57,10 @@ mysqli_close($link);
         <nav class="mt-4">
             <ul>
                 <li>
-                    <a href="/html/kasir-Dashboard.php" class="block py-2 px-4 hover:bg-gray-700" id="dashboardBtn">Dashboard</a>
+                    <a href="/html/teknisi-Dashboard.php" class="block py-2 px-4 hover:bg-gray-700" id="dashboardBtn">Dashboard</a>
                 </li>
                 <li>
-                    <a href="/html/kasir-Transaksi.php" class="block py-2 px-4 hover:bg-gray-700" id="transaksiBtn">Transaksi</a>
-                </li>
-                <li>
-                    <a href="/html/kasir-Pembayaran.php" class="block py-2 px-4 hover:bg-gray-700" id="pembayaranBtn">Pembayaran</a>
-                </li>
-                <li>
-                    <a href="/html/kasir-Riwayat.php" class="block py-2 px-4 text-gray-800 bg-gray-500" id="riwayatBtn">Riwayat</a>
+                    <a href="/html/teknisi-Dashboard.php" class="block py-2 px-4 text-gray-800 bg-gray-500" id="riwayatBtn">Riwayat</a>
                 </li>
             </ul>
         </nav>
@@ -90,7 +84,6 @@ mysqli_close($link);
                                 <th class="px-4 py-2 border">Tanggal Masuk</th>
                                 <th class="px-4 py-2 border">Tanggal Keluar</th>
                                 <th class="px-4 py-2 border">ID Service</th>
-                                <th class="px-4 py-2 border">Nama Pemilik</th>
                                 <th class="px-4 py-2 border">Nama Barang</th>
                                 <th class="px-4 py-2 border">Keterangan Akhir</th>
                                 <th class="px-4 py-2 border">Aksi</th>
@@ -103,7 +96,6 @@ mysqli_close($link);
                                     <td class="px-4 py-2 border"><?php echo date('d-m-Y', strtotime($item['tanggal_masuk'])); ?></td>
                                     <td class="px-4 py-2 border"><?php echo date('d-m-Y', strtotime($item['tanggal_keluar'])); ?></td>
                                     <td class="px-4 py-2 border"><?php echo $item['id_service']; ?></td>
-                                    <td class="px-4 py-2 border"><?php echo $item['nama_pemilik']; ?></td>
                                     <td class="px-4 py-2 border"><?php echo $item['nama_barang']; ?></td>
                                     <td class="px-4 py-2 border"><?php echo $item['keterangan_akhir']; ?></td>
                                     <td class="px-4 py-2 border">
@@ -117,7 +109,7 @@ mysqli_close($link);
                 <!-- Pagination -->
                 <div class="mt-4 flex justify-center">
                     <?php for ($i = 1; $i <= $total_pages; $i++) : ?>
-                        <a href="?page=<?php echo $i; ?>" class="mx-1 px-3 py-2 bg-gray-500 text-white rounded hover:bg-blue-600"><?php echo $i; ?></a>
+                        <a href="?page=<?php echo $i; ?>" class="mx-1 px-3 py-2 bg-gray-200 rounded hover:bg-gray-300"><?php echo $i; ?></a>
                     <?php endfor; ?>
                 </div>
             </div>

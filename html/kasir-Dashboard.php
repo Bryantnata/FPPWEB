@@ -279,17 +279,17 @@ mysqli_close($link);
     <div class="mt-8">
       <h2 class="text-lg font-semibold mb-4">Laporan Pemberitahuan</h2>
       <div class="overflow-x-auto">
-        <table class="w-full bg-white border border-gray-400 rounded-lg">
+        <table class="w-full border-collapse border border-gray-400">
           <thead>
-            <tr class="divide-x divide-gray-400">
-              <th class="px-4 py-2">No</th>
-              <th class="px-4 py-2">ID Service</th>
-              <th class="px-4 py-2">Nama Pemilik</th>
-              <th class="px-4 py-2">Nama Barang</th>
-              <th class="px-4 py-2">No. Hp</th>
-              <th class="px-4 py-2">Keterangan</th>
-              <th class="px-4 py-2">Kondisi</th>
-              <th class="px-4 py-2">Status</th>
+            <tr class="bg-gray-200">
+              <th class="px-4 py-2 border">No</th>
+              <th class="px-4 py-2 border">ID Service</th>
+              <th class="px-4 py-2 border">Nama Pemilik</th>
+              <th class="px-4 py-2 border">Nama Barang</th>
+              <th class="px-4 py-2 border">No. Hp</th>
+              <th class="px-4 py-2 border">Keterangan</th>
+              <th class="px-4 py-2 border">Kondisi</th>
+              <th class="px-4 py-2 border">Status</th>
             </tr>
           </thead>
           <tbody id="barangList">
@@ -314,15 +314,15 @@ mysqli_close($link);
                 };
 
                 echo "<tr class='hover:bg-gray-50' data-id='" . $row["ID_Service"] . "'>";
-                echo "<td class='border px-4 py-2 border-gray-400 text-center'>" . $no . "</td>";
-                echo "<td class='border px-4 py-2 border-gray-400 text-center'>" . $row["ID_Service"] . "</td>";
-                echo "<td class='border px-4 py-2 border-gray-400'>" . $row["Nama_Pemilik"] . "</td>";
-                echo "<td class='border px-4 py-2 border-gray-400'>" . $row["Nama_Barang"] . "</td>";
-                echo "<td class='border px-4 py-2 border-gray-400 text-center'>";
+                echo "<td class='px-4 py-2 border border text-center'>" . $no . "</td>";
+                echo "<td class='px-4 py-2 border border text-center'>" . $row["ID_Service"] . "</td>";
+                echo "<td class='px-4 py-2 border border'>" . $row["Nama_Pemilik"] . "</td>";
+                echo "<td class='px-4 py-2 border border'>" . $row["Nama_Barang"] . "</td>";
+                echo "<td class='px-4 py-2 border border text-center'>";
                 echo "<button class='show-contact' data-nama='" . $row["Nama_Pemilik"] . "' data-nohp='" . $row["no_hp"] . "' data-description='" . $row["Keterangan_Awal"] . "' data-id='" . $row["ID_Service"] . "' data-type='pemberitahuan'>";
                 echo "<i class='fas fa-envelope'></i></button>";
                 echo "</td>";
-                echo "<td class='border px-4 py-2 border-gray-400 text-center'>";
+                echo "<td class='px-4 py-2 border border text-center'>";
                 if (!empty($row["Keterangan_Awal"])) {
                   echo "<button class='show-description-with-options' 
                   data-description='" . htmlspecialchars($row["Keterangan_Awal"], ENT_QUOTES) . "' 
@@ -335,13 +335,13 @@ mysqli_close($link);
                 }
                 echo "</td>";
 
-                echo "<td class='border px-4 py-2 border-gray-400 text-center'>" . $kondisi . "</td>";
-                echo "<td class='border px-4 py-2 border-gray-400 text-center $statusClass'>" . $status . "</td>";
+                echo "<td class='px-4 py-2 border border text-center'>" . $kondisi . "</td>";
+                echo "<td class='px-4 py-2 border border text-center $statusClass'>" . $status . "</td>";
                 echo "</tr>";
                 $no++;
               }
             } else {
-              echo "<tr><td colspan='8' class='px-4 py-2 text-center'>Tidak ada data barang yang perlu dihubungi.</td></tr>";
+              echo "<tr><td colspan='8' class='px-4 py-2 border text-center'>Tidak ada data barang yang perlu dihubungi.</td></tr>";
             }
             ?>
           </tbody>
@@ -367,18 +367,18 @@ mysqli_close($link);
     <div class="mt-8">
       <h2 class="text-lg font-semibold mb-4">Laporan Pengambilan</h2>
       <div class="overflow-x-auto">
-        <table class="w-full bg-white border border-gray-400 rounded-lg">
+        <table class="w-full border-collapse border border-gray-400">
           <thead>
-            <tr class="divide-x divide-gray-400">
-              <th class="px-4 py-2">No</th>
-              <th class="px-4 py-2">ID Service</th>
-              <th class="px-4 py-2">Nama Pemilik</th>
-              <th class="px-4 py-2">Nama Barang</th>
-              <th class="px-4 py-2">No. Hp</th>
-              <th class="px-4 py-2">Keterangan</th>
-              <th class="px-4 py-2">Kondisi</th>
-              <th class="px-4 py-2">Status</th>
-              <th class="px-4 py-2">Aksi</th>
+            <tr class="bg-gray-200">
+              <th class="px-4 py-2 border">No</th>
+              <th class="px-4 py-2 border">ID Service</th>
+              <th class="px-4 py-2 border">Nama Pemilik</th>
+              <th class="px-4 py-2 border">Nama Barang</th>
+              <th class="px-4 py-2 border">No. Hp</th>
+              <th class="px-4 py-2 border">Keterangan</th>
+              <th class="px-4 py-2 border">Kondisi</th>
+              <th class="px-4 py-2 border">Status</th>
+              <th class="px-4 py-2 border">Aksi</th>
             </tr>
           </thead>
           <tbody id="barangListPengambilan">
@@ -395,15 +395,15 @@ mysqli_close($link);
                 $hubungiAmbilClass = $row["hubungi_ambil"] == 'Sudah' ? 'bg-white' : 'bg-pink-200';
 
                 echo "<tr class='hover:bg-gray-50' data-id='" . $row["ID_Service"] . "'>";
-                echo "<td class='border px-4 py-2 border-gray-400 text-center'>" . $no . "</td>";
-                echo "<td class='border px-4 py-2 border-gray-400 text-center'>" . $row["ID_Service"] . "</td>";
-                echo "<td class='border px-4 py-2 border-gray-400'>" . $row["Nama_Pemilik"] . "</td>";
-                echo "<td class='border px-4 py-2 border-gray-400'>" . $row["Nama_Barang"] . "</td>";
-                echo "<td class='border px-4 py-2 border-gray-400 text-center $hubungiAmbilClass'>";
+                echo "<td class='px-4 py-2 border  text-center'>" . $no . "</td>";
+                echo "<td class='px-4 py-2 border  text-center'>" . $row["ID_Service"] . "</td>";
+                echo "<td class='px-4 py-2 border '>" . $row["Nama_Pemilik"] . "</td>";
+                echo "<td class='px-4 py-2 border '>" . $row["Nama_Barang"] . "</td>";
+                echo "<td class='px-4 py-2 border  text-center $hubungiAmbilClass'>";
                 echo "<button class='show-contact' data-nama='" . $row["Nama_Pemilik"] . "' data-nohp='" . $row["no_hp"] . "' data-description='" . $row["Keterangan_Akhir"] . "' data-id='" . $row["ID_Service"] . "' data-type='pengambilan'>";
                 echo "<i class='fas fa-envelope'></i></button>";
                 echo "</td>";
-                echo "<td class='border px-4 py-2 border-gray-400 text-center'>";
+                echo "<td class='px-4 py-2 border  text-center'>";
                 if (!empty($row["Keterangan_Akhir"])) {
                   echo "<button class='show-description' data-description='" . htmlspecialchars($row["Keterangan_Akhir"], ENT_QUOTES) . "'>";
                   echo "<i class='fas fa-file-alt'></i></button>";
@@ -411,9 +411,9 @@ mysqli_close($link);
                   echo "-";
                 }
                 echo "</td>";
-                echo "<td class='border px-4 py-2 border-gray-400 text-center'>" . (isset($row["Kondisi"]) ? $row["Kondisi"] : 'Belum Diperiksa') . "</td>";
-                echo "<td class='border px-4 py-2 border-gray-400 text-center bg-green-500 text-white font-bold'>" . $row["status"] . "</td>";
-                echo "<td class='border py-2 border-gray-400 text-center'>";
+                echo "<td class='px-4 py-2 border  text-center'>" . (isset($row["Kondisi"]) ? $row["Kondisi"] : 'Belum Diperiksa') . "</td>";
+                echo "<td class='px-4 py-2 border  text-center bg-green-500 text-white font-bold'>" . $row["status"] . "</td>";
+                echo "<td class='border py-2 px-4 text-center'>";
                 if ($row["hubungi_ambil"] == 'Sudah') {
                   echo "<button class='confirm-pickup bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded' data-id='" . $row["ID_Service"] . "'>Konfirmasi Pengambilan</button>";
                 }
@@ -422,7 +422,7 @@ mysqli_close($link);
                 $no++;
               }
             } else {
-              echo "<tr><td colspan='9' class='px-4 py-2 text-center'>Tidak ada data barang yang siap diambil.</td></tr>";
+              echo "<tr><td colspan='9' class='px-4 py-2 border text-center'>Tidak ada data barang yang siap diambil.</td></tr>";
             }
             ?>
           </tbody>

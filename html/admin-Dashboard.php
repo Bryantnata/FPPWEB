@@ -110,7 +110,7 @@ mysqli_close($link);
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kasir</title>
+  <title>Admin</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="/js/script.js"></script>
@@ -120,7 +120,7 @@ mysqli_close($link);
   <!-- Sidebar -->
   <aside class="sidebar bg-gray-800 text-gray-400 w-64 min-h-screen fixed top-0 left-0 z-50">
     <!-- Logo -->
-    <div class="flex items-center justify-center h-20 mb-4">
+    <div class="flex items-center justify-center h-20 mt-4 mb-4">
       <img src="/assets/logopweb.png" alt="Logo" class="h-16 w-auto" />
       <!-- Mengurangi tinggi logo agar tidak terlalu besar -->
     </div>
@@ -128,13 +128,13 @@ mysqli_close($link);
     <nav class="mt-4">
       <ul>
         <li>
-          <a href="/html/admin-Dashboard.php" class="block py-2 px-4 hover:bg-gray-700 active:bg-blue-500" id="dashboardBtn">Dashboard</a>
+          <a href="/html/admin-Dashboard.php" class="block py-2 px-4 text-gray-800 bg-gray-500" id="dashboardBtn">Dashboard</a>
         </li>
         <li>
-          <a href="/html/admin-" class="block py-2 px-4 hover:bg-gray-700" id="transaksiBtn">Akun</a>
+          <a href="/html/admin-akun.php" class="block py-2 px-4 hover:bg-gray-700" id="akunBtn">Akun</a>
         </li>
         <li>
-          <a href="/html/kasir-Riwayat.html" class="block py-2 px-4 hover:bg-gray-700" id="riwayatBtn">Riwayat</a>
+          <a href="/html/admin-riwayat.php" class="block py-2 px-4 hover:bg-gray-700" id="riwayatBtn">Riwayat</a>
         </li>
       </ul>
     </nav>

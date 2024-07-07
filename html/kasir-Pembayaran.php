@@ -79,14 +79,14 @@ $result = $stmt->get_result();
         <div class="overflow-x-auto">
           <table class="w-full border-collapse border border-gray-400">
             <thead>
-              <tr class="divide-x divide-gray-400">
-                <th class="px-4 py-2">No</th>
-                <th class="px-4 py-2">Kode</th>
-                <th class="px-4 py-2">Nama Pemilik</th>
-                <th class="px-4 py-2">Tipe Barang</th>
-                <th class="px-4 py-2">Tanggal Masuk</th>
-                <th class="px-4 py-2">Total Harga</th>
-                <th class="px-4 py-2">Aksi</th>
+              <tr class="bg-gray-200">
+                <th class="px-4 py-2 border">No</th>
+                <th class="px-4 py-2 border">Kode</th>
+                <th class="px-4 py-2 border">Nama Pemilik</th>
+                <th class="px-4 py-2 border">Tipe Barang</th>
+                <th class="px-4 py-2 border">Tanggal Masuk</th>
+                <th class="px-4 py-2 border">Total Harga</th>
+                <th class="px-4 py-2 border">Aksi</th>
               </tr>
             </thead>
             <tbody id="pembayaranList">
@@ -95,17 +95,17 @@ $result = $stmt->get_result();
                 $no = 1;
                 while ($row = $result->fetch_assoc()) {
                   echo "<tr class='divide-x divide-gray-400'>";
-                  echo "<td class='border border-gray-400 px-4 py-2'>" . $no++ . "</td>";
-                  echo "<td class='border border-gray-400 px-4 py-2'>" . $row["id_barang"] . "</td>";
-                  echo "<td class='border border-gray-400 px-4 py-2'>" . $row["nama"] . "</td>";
-                  echo "<td class='border border-gray-400 px-4 py-2'>" . $row["nama_barang"] . " (" . $row["jenis_barang"] . ")</td>";
-                  echo "<td class='border border-gray-400 px-4 py-2'>" . $row["tanggal_input"] . "</td>"; // Menampilkan tanggal masuk
-                  echo "<td class='border border-gray-400 px-4 py-2'>Rp " . number_format($row["total_harga"], 0, ',', '.') . "</td>";
-                  echo "<td class='border border-gray-400 px-4 py-2'><a href='detailPembayaran.php?id=" . $row["id_barang"] . "' class='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>Edit</a></td>";
+                  echo "<td class='px-4 py-2 border '>" . $no++ . "</td>";
+                  echo "<td class='px-4 py-2 border '>" . $row["id_barang"] . "</td>";
+                  echo "<td class='px-4 py-2 border '>" . $row["nama"] . "</td>";
+                  echo "<td class='px-4 py-2 border '>" . $row["nama_barang"] . " (" . $row["jenis_barang"] . ")</td>";
+                  echo "<td class='px-4 py-2 border '>" . $row["tanggal_input"] . "</td>"; // Menampilkan tanggal masuk
+                  echo "<td class='px-4 py-2 border '>Rp " . number_format($row["total_harga"], 0, ',', '.') . "</td>";
+                  echo "<td class='px-4 py-2 border '><a href='detailPembayaran.php?id=" . $row["id_barang"] . "' class='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>Edit</a></td>";
                   echo "</tr>";
                 }
               } else {
-                echo "<tr><td colspan='7' class='text-center'>Tidak ada data pembayaran.</td></tr>"; // Perhatikan colspan='7'
+                echo "<tr><td colspan='7' class='text-center px-4 py-2 border'>Tidak ada data pembayaran.</td></tr>"; // Perhatikan colspan='7'
               }
               ?>
             </tbody>

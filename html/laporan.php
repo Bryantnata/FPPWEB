@@ -124,8 +124,48 @@
 
   $(document).ready(function() {
     $('#customerSearch').select2({
-      // ... (konfigurasi Select2 tetap sama) ...
+      ajax: {
+        url: '/php/search_customer.php',
+        dataType: 'json',
+        delay: 250,
+        data: function(params) {
+          return {
+            q: params.term
+          };
+        },
+        processResults: function(data) {
+          return {
+            results: data
+          };
+        },
+        cache: true
+      },
+      minimumInputLength: 1,
+      placeholder: 'Cari nama atau nomor telepon pelanggan',
+      templateResult: formatCustomer,
+      templateSelection: formatCustomerSelection
     });
+
+    function formatCustomer(customer) {
+      if (!customer.id) {
+        return customer.text;
+      }
+      return $(`
+    <div class="flex items-center py-1">
+      <div>
+        <p class="text-sm font-semibold">${customer.name}</p>
+        <p class="text-xs text-gray-600">${customer.phone}</p>
+      </div>
+    </div>
+    `);
+    }
+
+    function formatCustomerSelection(customer) {
+      if (!customer.id) {
+        return customer.text;
+      }
+      return $(`<span class="text-sm">${customer.name} (${customer.phone})</span>`);
+    }
 
     $('#customerSearch').on('select2:select', function(e) {
       var data = e.params.data;
