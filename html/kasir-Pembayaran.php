@@ -3,8 +3,8 @@ session_start();
 include "/laragon/www/FPPWEB/php/connect_db.php"; // Sesuaikan path
 
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'kasir') {
-    header("Location: role.php");
-    exit();
+  header("Location: role.php");
+  exit();
 }
 
 $sql = "SELECT b.ID_Service AS id_barang, p.nama, b.nama_barang, b.jenis_barang, b.tanggal_input, SUM(rk.total) AS total_harga 
@@ -16,12 +16,12 @@ $sql = "SELECT b.ID_Service AS id_barang, p.nama, b.nama_barang, b.jenis_barang,
 
 // Penanganan form submission (filter pencarian)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['search'])) {
-    $searchKeyword = $_POST['search'];
-    $stmt = $link->prepare($sql . " AND (b.ID_Service LIKE ? OR p.nama LIKE ?) GROUP BY b.ID_Service, p.nama, b.nama_barang, b.jenis_barang");
-    $searchKeyword = "%$searchKeyword%";
-    $stmt->bind_param("ss", $searchKeyword, $searchKeyword);
+  $searchKeyword = $_POST['search'];
+  $stmt = $link->prepare($sql . " AND (b.ID_Service LIKE ? OR p.nama LIKE ?) GROUP BY b.ID_Service, p.nama, b.nama_barang, b.jenis_barang");
+  $searchKeyword = "%$searchKeyword%";
+  $stmt->bind_param("ss", $searchKeyword, $searchKeyword);
 } else {
-    $stmt = $link->prepare($sql . " GROUP BY b.ID_Service, p.nama, b.nama_barang, b.jenis_barang");
+  $stmt = $link->prepare($sql . " GROUP BY b.ID_Service, p.nama, b.nama_barang, b.jenis_barang");
 }
 
 $stmt->execute();
@@ -67,76 +67,94 @@ $result = $stmt->get_result();
     <div class="absolute bottom-10 left-0 w-full font-bold lg:block">
       <a href="#" id="logoutBtn" class="block w-2/3 py-3 mx-auto text-sm text-white text-center bg-red-600 hover:bg-red-700 rounded-md z-10">Log Out</a>
     </div>
-    <!-- Jam -->
-    <div id="clock" class="absolute bottom-1 left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-bold lg:block text-center text-white"></div>
   </aside>
   <!-- Content Area -->
   <div class="ml-64 p-8">
     <div class="container mx-auto py-8">
       <h1 class="text-3xl font-bold mb-4 text-center">Pembayaran</h1>
-      <div class="mt-8">
+      <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <div class="mb-4 flex justify-end">
+          <input id="searchInput" type="text" class="w-1/4 px-3 py-2 border border-gray-300 rounded-md" placeholder="Cari berdasarkan nama pelanggan" />
+        </div>
         <div class="overflow-x-auto">
-        <table class="w-full border-collapse border border-gray-400">
-                <thead>
-                    <tr class="divide-x divide-gray-400">
-                        <th class="px-4 py-2">No</th>
-                        <th class="px-4 py-2">Kode</th>
-                        <th class="px-4 py-2">Nama Pemilik</th>
-                        <th class="px-4 py-2">Tipe Barang</th>
-                        <th class="px-4 py-2">Tanggal Masuk</th> <th class="px-4 py-2">Total Harga</th>
-                        <th class="px-4 py-2">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    if ($result->num_rows > 0) {
-                        $no = 1;
-                        while ($row = $result->fetch_assoc()) {
-                            echo "<tr class='divide-x divide-gray-400'>";
-                            echo "<td class='border border-gray-400 px-4 py-2'>" . $no++ . "</td>";
-                            echo "<td class='border border-gray-400 px-4 py-2'>" . $row["id_barang"] . "</td>";
-                            echo "<td class='border border-gray-400 px-4 py-2'>" . $row["nama"] . "</td>";
-                            echo "<td class='border border-gray-400 px-4 py-2'>" . $row["nama_barang"] . " (" . $row["jenis_barang"] . ")</td>";
-                            echo "<td class='border border-gray-400 px-4 py-2'>" . $row["tanggal_input"] . "</td>"; // Menampilkan tanggal masuk
-                            echo "<td class='border border-gray-400 px-4 py-2'>Rp " . number_format($row["total_harga"], 0, ',', '.') . "</td>";
-                            echo "<td class='border border-gray-400 px-4 py-2'><a href='detailPembayaran.php?id=" . $row["id_barang"] . "' class='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>Edit</a></td>";
-                            echo "</tr>";
-                        }
-                    } else {
-                        echo "<tr><td colspan='7' class='text-center'>Tidak ada data pembayaran.</td></tr>"; // Perhatikan colspan='7'
-                    }
-                    ?>
-                </tbody>
-            </table>
+          <table class="w-full border-collapse border border-gray-400">
+            <thead>
+              <tr class="divide-x divide-gray-400">
+                <th class="px-4 py-2">No</th>
+                <th class="px-4 py-2">Kode</th>
+                <th class="px-4 py-2">Nama Pemilik</th>
+                <th class="px-4 py-2">Tipe Barang</th>
+                <th class="px-4 py-2">Tanggal Masuk</th>
+                <th class="px-4 py-2">Total Harga</th>
+                <th class="px-4 py-2">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="pembayaranList">
+              <?php
+              if ($result->num_rows > 0) {
+                $no = 1;
+                while ($row = $result->fetch_assoc()) {
+                  echo "<tr class='divide-x divide-gray-400'>";
+                  echo "<td class='border border-gray-400 px-4 py-2'>" . $no++ . "</td>";
+                  echo "<td class='border border-gray-400 px-4 py-2'>" . $row["id_barang"] . "</td>";
+                  echo "<td class='border border-gray-400 px-4 py-2'>" . $row["nama"] . "</td>";
+                  echo "<td class='border border-gray-400 px-4 py-2'>" . $row["nama_barang"] . " (" . $row["jenis_barang"] . ")</td>";
+                  echo "<td class='border border-gray-400 px-4 py-2'>" . $row["tanggal_input"] . "</td>"; // Menampilkan tanggal masuk
+                  echo "<td class='border border-gray-400 px-4 py-2'>Rp " . number_format($row["total_harga"], 0, ',', '.') . "</td>";
+                  echo "<td class='border border-gray-400 px-4 py-2'><a href='detailPembayaran.php?id=" . $row["id_barang"] . "' class='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>Edit</a></td>";
+                  echo "</tr>";
+                }
+              } else {
+                echo "<tr><td colspan='7' class='text-center'>Tidak ada data pembayaran.</td></tr>"; // Perhatikan colspan='7'
+              }
+              ?>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    // Fungsi untuk logout
-    const logoutButton = document.getElementById("logoutBtn");
-    if (logoutButton) {
-      logoutButton.addEventListener("click", function(event) {
-        event.preventDefault(); // Mencegah aksi default dari anchor tag
+    document.addEventListener("DOMContentLoaded", function() {
+      const searchInput = document.getElementById('searchInput');
+      const pembayaranList = document.getElementById('pembayaranList');
+      const rows = pembayaranList.getElementsByTagName('tr');
 
-        // Tampilkan sweetalert2 dialog
-        Swal.fire({
-          title: "Apakah kamu yakin ingin keluar?",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#3085d6",
-          cancelButtonColor: "#d33",
-          confirmButtonText: "Ya, keluar",
-          cancelButtonText: "Batal",
-        }).then((result) => {
-          if (result.isConfirmed) {
-            // Jika pengguna menekan tombol "Ya, keluar", arahkan ke halaman index.html
-            window.location.href = "/index.html";
+      searchInput.addEventListener('keyup', function() {
+        const searchTerm = searchInput.value.toLowerCase();
+
+        for (let i = 0; i < rows.length; i++) {
+          const namaPemilik = rows[i].getElementsByTagName('td')[3].textContent.toLowerCase();
+          if (namaPemilik.includes(searchTerm)) {
+            rows[i].style.display = '';
+          } else {
+            rows[i].style.display = 'none';
           }
-        });
+        }
       });
-    }
+
+      // Fungsi untuk logout
+      const logoutButton = document.getElementById("logoutBtn");
+      if (logoutButton) {
+        logoutButton.addEventListener("click", function(event) {
+          event.preventDefault();
+          Swal.fire({
+            title: "Apakah kamu yakin ingin keluar?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Ya, keluar",
+            cancelButtonText: "Batal",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              window.location.href = "/index.html";
+            }
+          });
+        });
+      }
+    });
   </script>
 </body>
 

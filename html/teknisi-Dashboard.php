@@ -660,94 +660,106 @@ mysqli_close($link);
     window.location.href = `detail.php?id=${serviceId}`;
   }
 
-  function konfirmasiDikembalikan(id) {
+  function konfirmasiDikembalikan(id, button) {
     Swal.fire({
       title: 'Konfirmasi Pengembalian',
       text: "Apakah Anda yakin ingin mengembalikan barang ini?",
       icon: 'warning',
+      input: 'textarea',
+      inputLabel: 'Alasan Pengembalian',
+      inputPlaceholder: 'Masukkan alasan pengembalian...',
+      inputAttributes: {
+        'aria-label': 'Masukkan alasan pengembalian'
+      },
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
       confirmButtonText: 'Ya, kembalikan',
-      cancelButtonText: 'Batal'
+      cancelButtonText: 'Batal',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Anda harus memasukkan alasan pengembalian!'
+        }
+      }
     }).then((result) => {
       if (result.isConfirmed) {
-        kembalikanBarang(id);
+        kembalikanBarang(id, button, result.value);
       }
     });
+  
 
-    function kembalikanBarang(id) {
-      fetch('/php/kembalikan_barang.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: 'id=' + id
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            Swal.fire(
-              'Berhasil!',
-              'Barang telah dikembalikan.',
-              'success'
-            ).then(() => {
-              // Hapus baris dari tabel
-              const row = document.querySelector(`#barangListDibatalkan tr[data-id="${id}"]`);
-              if (row) {
-                row.remove();
-              }
-
-              // Periksa apakah tabel sudah kosong
-              const tbody = document.querySelector('#barangListDibatalkan');
-              if (tbody.children.length === 0) {
-                // Jika tabel kosong, tambahkan baris "Tidak ada data"
-                const noDataRow = document.createElement('tr');
-                noDataRow.innerHTML = '<td colspan="9" class="px-4 py-2 text-center">Tidak ada data barang yang dibatalkan.</td>';
-                tbody.appendChild(noDataRow);
-              }
-
-              // Opsional: Update nomor urut
-              updateRowNumbers();
-            });
-          } else {
-            Swal.fire(
-              'Gagal!',
-              'Terjadi kesalahan saat mengembalikan barang.',
-              'error'
-            );
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
+  function kembalikanBarang(id) {
+    fetch('/php/kembalikan_barang.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'id=' + id
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
           Swal.fire(
-            'Error!',
-            'Terjadi kesalahan pada server.',
+            'Berhasil!',
+            'Barang telah dikembalikan.',
+            'success'
+          ).then(() => {
+            // Hapus baris dari tabel
+            const row = document.querySelector(`#barangListDibatalkan tr[data-id="${id}"]`);
+            if (row) {
+              row.remove();
+            }
+
+            // Periksa apakah tabel sudah kosong
+            const tbody = document.querySelector('#barangListDibatalkan');
+            if (tbody.children.length === 0) {
+              // Jika tabel kosong, tambahkan baris "Tidak ada data"
+              const noDataRow = document.createElement('tr');
+              noDataRow.innerHTML = '<td colspan="9" class="px-4 py-2 text-center">Tidak ada data barang yang dibatalkan.</td>';
+              tbody.appendChild(noDataRow);
+            }
+
+            // Opsional: Update nomor urut
+            updateRowNumbers();
+          });
+        } else {
+          Swal.fire(
+            'Gagal!',
+            'Terjadi kesalahan saat mengembalikan barang.',
             'error'
           );
-        });
-    }
-
-    // Fungsi untuk mengupdate nomor urut
-    function updateRowNumbers() {
-      const rows = document.querySelectorAll('#barangPeriksa tr');
-      rows.forEach((row, index) => {
-        const firstCell = row.querySelector('td:first-child');
-        if (firstCell) {
-          firstCell.textContent = index + 1;
         }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        Swal.fire(
+          'Error!',
+          'Terjadi kesalahan pada server.',
+          'error'
+        );
       });
-    }
+  }
 
-    // Fungsi untuk mengupdate total periksa
-    function updateTotalPeriksa() {
-      const totalElement = document.querySelector('#total-laporan');
-      const rows = document.querySelectorAll('#barangPeriksa tr');
-      const total = rows.length;
-      if (totalElement) {
-        totalElement.textContent = total;
+  // Fungsi untuk mengupdate nomor urut
+  function updateRowNumbers() {
+    const rows = document.querySelectorAll('#barangPeriksa tr');
+    rows.forEach((row, index) => {
+      const firstCell = row.querySelector('td:first-child');
+      if (firstCell) {
+        firstCell.textContent = index + 1;
       }
+    });
+  }
+
+  // Fungsi untuk mengupdate total periksa
+  function updateTotalPeriksa() {
+    const totalElement = document.querySelector('#total-laporan');
+    const rows = document.querySelectorAll('#barangPeriksa tr');
+    const total = rows.length;
+    if (totalElement) {
+      totalElement.textContent = total;
     }
+  }
   }
 </script>
 

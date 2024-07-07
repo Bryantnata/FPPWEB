@@ -24,6 +24,12 @@ if ($result_barang->num_rows > 0) {
     $stmt_keluhan->execute();
     $result_keluhan = $stmt_keluhan->get_result();
 
+    if ($result_keluhan->num_rows == 0) {
+        // Jika tidak ada detail keluhan, redirect ke halaman nota
+        header("Location: nota.php?id=" . $id_barang);
+        exit();
+    }
+
 ?>
 
     <!DOCTYPE html>
@@ -164,9 +170,9 @@ if ($result_barang->num_rows > 0) {
                                     </tbody>
                                 </table>
                                 <div class="flex justify-start mt-4">
-                                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-4">Simpan</button>
-                                <a href="nota.php?id=<?php echo $id_barang; ?>" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Lihat Nota</a>
-                            </div>
+                                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-4">Simpan</button>
+                                    <a href="nota.php?id=<?php echo $id_barang; ?>" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Lihat Nota</a>
+                                </div>
                             </form>
                             <div class="mt-4 text-right">
                                 <?php
@@ -182,8 +188,6 @@ if ($result_barang->num_rows > 0) {
                                 <span class="font-semibold">Total Harga: Rp <?php echo number_format($total_harga, 0, ',', '.'); ?></span>
                             </div>
                         </div>
-                    <?php } else { ?>
-                        <p class="text-center">Detail keluhan tidak ditemukan.</p>
                     <?php } ?>
                 </div>
             </div>

@@ -1,5 +1,7 @@
 <?php
 include '/laragon/www/FPPWEB/php/connect_db.php'; // Adjust path as needed
+$from = isset($_GET['from']) ? $_GET['from'] : '';
+
 
 $id_barang = $_GET['id'];
 
@@ -153,14 +155,15 @@ $is_lunas = $row_barang['status'] === 'Lunas';
       <button onclick="window.print()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
         Cetak Nota
       </button>
-      <?php if (!$is_lunas) : ?>
+      <?php if (!$is_lunas && $from !== 'riwayat') : ?>
         <button id="lunasBtn" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
           Lunas
         </button>
       <?php endif; ?>
-      <a href="/html/kasir-Dashboard.php" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+      <a href="<?php echo $from === 'riwayat' ? '/html/kasir-Riwayat.php' : '/html/kasir-Pembayaran.php'; ?>" 
+       class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
         Kembali
-      </a>
+    </a>
     </div>
   </div>
 
@@ -198,7 +201,7 @@ $is_lunas = $row_barang['status'] === 'Lunas';
       location.reload();
     };
 
-    <?php if (!$is_lunas) : ?>
+    <?php if (!$is_lunas && $from !== 'riwayat')  : ?>
       document.getElementById('lunasBtn').addEventListener('click', function() {
         Swal.fire({
           title: 'Konfirmasi',
