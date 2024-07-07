@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jun 30, 2024 at 03:03 PM
+-- Generation Time: Jul 07, 2024 at 10:33 AM
 -- Server version: 8.0.30
 -- PHP Version: 8.3.7
 
@@ -51,21 +51,26 @@ CREATE TABLE `barang` (
   `status` enum('Belum Diperbaiki','Sedang Diperbaiki','Selesai Diperbaiki','') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `status_updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `ID_Service` int NOT NULL,
-  `hubungi_kondisi` enum('Sudah','Belum') DEFAULT 'Belum',
+  `hubungi_kondisi` enum('Belum','Sudah') DEFAULT 'Belum',
   `hubungi_ambil` enum('Sudah','Belum') DEFAULT 'Belum',
   `diambil` enum('Sudah','Belum') DEFAULT 'Belum',
-  `dibayar` enum('Sudah','Belum') DEFAULT 'Belum'
+  `dibayar` enum('Sudah','Belum') DEFAULT 'Belum',
+  `dikembalikan` enum('Sudah','Belum') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'Belum',
+  `lunas` enum('Lunas','Belum') DEFAULT 'Belum'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `barang`
 --
 
-INSERT INTO `barang` (`tanggal_input`, `tanggal_selesai`, `nama_barang`, `jenis_barang`, `merk_barang`, `keluhan_barang`, `id_pelanggan`, `status`, `status_updated_at`, `ID_Service`, `hubungi_kondisi`, `hubungi_ambil`, `diambil`, `dibayar`) VALUES
-('2024-06-23 06:30:05', NULL, 'Laptop', 'Pro Max', 'Asus', 'Layar burn in', 30, 'Selesai Diperbaiki', '2024-06-30 08:56:36', 43, 'Sudah', 'Sudah', 'Belum', 'Belum'),
-('2024-06-25 18:43:30', NULL, 'Laptop', 'Zenbook', 'asus', 'TIba-tiba restart', 31, 'Belum Diperbaiki', '2024-06-30 08:47:43', 44, 'Belum', 'Belum', 'Belum', 'Belum'),
-('2024-06-27 20:41:26', NULL, 'laptop', 'asfqef', 'asff', 'jgasdv', 32, 'Belum Diperbaiki', '2024-06-30 08:45:18', 45, 'Belum', 'Belum', 'Belum', 'Belum'),
-('2024-06-29 01:00:35', NULL, 'asdfasf', 'asdaD', 'zxcadf', 'ASVAS', 31, 'Belum Diperbaiki', '2024-06-28 18:00:35', 46, 'Belum', 'Belum', 'Belum', 'Belum');
+INSERT INTO `barang` (`tanggal_input`, `tanggal_selesai`, `nama_barang`, `jenis_barang`, `merk_barang`, `keluhan_barang`, `id_pelanggan`, `status`, `status_updated_at`, `ID_Service`, `hubungi_kondisi`, `hubungi_ambil`, `diambil`, `dibayar`, `dikembalikan`, `lunas`) VALUES
+('2024-06-23 06:30:05', NULL, 'Laptop', 'Pro Max', 'Asus', 'Layar burn in', 30, 'Selesai Diperbaiki', '2024-06-30 08:56:36', 43, 'Sudah', 'Sudah', 'Belum', 'Belum', 'Belum', 'Belum'),
+('2024-06-25 18:43:30', NULL, 'Laptop', 'Zenbook', 'asus', 'TIba-tiba restart', 31, 'Selesai Diperbaiki', '2024-07-07 08:59:50', 44, 'Sudah', 'Belum', 'Belum', 'Belum', 'Sudah', 'Belum'),
+('2024-06-27 20:41:26', NULL, 'laptop', 'asfqef', 'asff', 'jgasdv', 32, 'Selesai Diperbaiki', '2024-07-07 09:02:27', 45, 'Sudah', 'Belum', 'Belum', 'Belum', 'Sudah', 'Belum'),
+('2024-06-29 01:00:35', NULL, 'asdfasf', 'asdaD', 'zxcadf', 'ASVAS', 31, 'Sedang Diperbaiki', '2024-07-06 17:45:10', 46, 'Sudah', 'Belum', 'Belum', 'Belum', 'Belum', 'Belum'),
+('2024-07-06 20:30:45', NULL, 'kjvkuyasd', 'dkjlhasvd', 'hhdvhs', 'asdvkhvd', 31, 'Sedang Diperbaiki', '2024-07-06 19:54:34', 47, 'Belum', 'Belum', 'Belum', 'Belum', 'Belum', 'Belum'),
+('2024-07-07 02:44:26', NULL, 'sfqw', 'mnvchvlahjsvd', 'hgaskdcksd', 'beep', 31, 'Selesai Diperbaiki', '2024-07-07 10:12:06', 48, 'Sudah', 'Sudah', 'Belum', 'Belum', 'Belum', 'Belum'),
+('2024-07-07 11:04:35', NULL, 'laptop', 'askhjdvoyuyc', 'jashdv', 'asjndvoauysvduyvas', 31, 'Selesai Diperbaiki', '2024-07-07 09:07:37', 49, 'Belum', 'Belum', 'Belum', 'Belum', 'Sudah', 'Belum');
 
 -- --------------------------------------------------------
 
@@ -106,22 +111,22 @@ CREATE TABLE `barang_menumpuk` (
 
 CREATE TABLE `detail_keluhan` (
   `id_keluhan` int NOT NULL,
-  `id_barang` int DEFAULT NULL,
-  `deskripsi` text,
   `keterangan_awal` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `konfirmasi_keterangan` enum('Eksekusi','Jangan Dieksekusi') NOT NULL,
+  `konfirmasi_keterangan` enum('Eksekusi','Jangan Dieksekusi') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT 'Jangan Dieksekusi',
   `keterangan_akhir` text NOT NULL,
   `id_user` int DEFAULT NULL,
-  `kondisi` enum('bisa diperbaiki','tidak bisa diperbaiki') DEFAULT NULL
+  `kondisi` enum('bisa diperbaiki','tidak bisa diperbaiki') DEFAULT NULL,
+  `ID_Service` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `detail_keluhan`
 --
 
-INSERT INTO `detail_keluhan` (`id_keluhan`, `id_barang`, `deskripsi`, `keterangan_awal`, `konfirmasi_keterangan`, `keterangan_akhir`, `id_user`, `kondisi`) VALUES
-(2, 43, 'AMSMDMVJHVSD', 'POKOKNYA BEGINI NANTI', 'Jangan Dieksekusi', 'dfsdfdsv', 11, 'bisa diperbaiki'),
-(3, 44, 'jkbsadhvavsdhvlshjkdvj', 'Sudah dianu', 'Jangan Dieksekusi', '', 11, 'tidak bisa diperbaiki');
+INSERT INTO `detail_keluhan` (`id_keluhan`, `keterangan_awal`, `konfirmasi_keterangan`, `keterangan_akhir`, `id_user`, `kondisi`, `ID_Service`) VALUES
+(2, 'POKOKNYA BEGINI NANTI', 'Jangan Dieksekusi', 'dfsdfdsv', 11, 'bisa diperbaiki', 43),
+(3, 'Sudah dianu', 'Jangan Dieksekusi', '', 11, 'tidak bisa diperbaiki', 44),
+(11, 'ganti ram', 'Eksekusi', 'Ganti RAM', 14, 'bisa diperbaiki', 48);
 
 -- --------------------------------------------------------
 
@@ -160,6 +165,13 @@ CREATE TABLE `rincian_keluhan` (
   `harga` decimal(10,2) NOT NULL,
   `total` decimal(10,2) GENERATED ALWAYS AS ((`jumlah` * `harga`)) STORED
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `rincian_keluhan`
+--
+
+INSERT INTO `rincian_keluhan` (`id_rincian`, `id_keluhan`, `jumlah`, `nama`, `tipe`, `harga`) VALUES
+(2, 11, 1, 'RAM', 'DDR3', 0.00);
 
 -- --------------------------------------------------------
 
@@ -219,7 +231,7 @@ ALTER TABLE `barang_menumpuk`
 ALTER TABLE `detail_keluhan`
   ADD PRIMARY KEY (`id_keluhan`),
   ADD KEY `id_user` (`id_user`),
-  ADD KEY `detail_keluhan_ibfk_1` (`id_barang`);
+  ADD KEY `fk_detail_keluhan_ID_Service` (`ID_Service`);
 
 --
 -- Indexes for table `pelanggan`
@@ -248,7 +260,7 @@ ALTER TABLE `user`
 -- AUTO_INCREMENT for table `barang`
 --
 ALTER TABLE `barang`
-  MODIFY `ID_Service` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
+  MODIFY `ID_Service` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 
 --
 -- AUTO_INCREMENT for table `barang_keluar`
@@ -266,7 +278,7 @@ ALTER TABLE `barang_menumpuk`
 -- AUTO_INCREMENT for table `detail_keluhan`
 --
 ALTER TABLE `detail_keluhan`
-  MODIFY `id_keluhan` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_keluhan` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `pelanggan`
@@ -278,7 +290,7 @@ ALTER TABLE `pelanggan`
 -- AUTO_INCREMENT for table `rincian_keluhan`
 --
 ALTER TABLE `rincian_keluhan`
-  MODIFY `id_rincian` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_rincian` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `user`
@@ -315,8 +327,8 @@ ALTER TABLE `barang_menumpuk`
 -- Constraints for table `detail_keluhan`
 --
 ALTER TABLE `detail_keluhan`
-  ADD CONSTRAINT `detail_keluhan_ibfk_1` FOREIGN KEY (`id_barang`) REFERENCES `barang` (`ID_Service`),
-  ADD CONSTRAINT `detail_keluhan_ibfk_2` FOREIGN KEY (`id_user`) REFERENCES `user` (`id_user`);
+  ADD CONSTRAINT `detail_keluhan_ibfk_2` FOREIGN KEY (`id_user`) REFERENCES `user` (`id_user`),
+  ADD CONSTRAINT `fk_detail_keluhan_ID_Service` FOREIGN KEY (`ID_Service`) REFERENCES `barang` (`ID_Service`);
 
 --
 -- Constraints for table `rincian_keluhan`
