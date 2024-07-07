@@ -3,11 +3,12 @@ include "/laragon/www/FPPWEB/php/connect_db.php";
 
 $serviceId = $_GET['id'];
 
-// Ambil data barang, pelanggan, dan teknisi
-$query = "SELECT b.*, p.nama AS nama_pemilik, p.alamat, u.nama AS nama_user 
-          FROM barang b 
+// Ambil data barang, pelanggan, dan detail keluhan
+$query = "SELECT b.*, p.nama AS nama_pemilik, p.alamat, p.no_hp, dk.keterangan_akhir, dk.keterangan_awal, dk.kondisi, u.nama AS nama_teknisi
+          FROM barang b
           JOIN pelanggan p ON b.id_pelanggan = p.id_pelanggan 
-          LEFT JOIN user u ON b.id_user = u.id_user
+          LEFT JOIN detail_keluhan dk ON b.ID_Service = dk.ID_Service
+          LEFT JOIN user u ON dk.id_user = u.id_user
           WHERE b.ID_Service = ?";
 $stmt = mysqli_prepare($link, $query);
 mysqli_stmt_bind_param($stmt, "i", $serviceId);
@@ -15,8 +16,30 @@ mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 $data = mysqli_fetch_assoc($result);
 
+// Tutup statement
+mysqli_stmt_close($stmt);
 
-// HTML untuk halaman detail perbaikan
+// Ambil data rincian keluhan jika ada
+$query_rincian = "SELECT rk.* 
+                  FROM rincian_keluhan rk
+                  JOIN detail_keluhan dk ON rk.id_keluhan = dk.id_keluhan
+                  WHERE dk.ID_Service = ?";
+$stmt_rincian = mysqli_prepare($link, $query_rincian);
+mysqli_stmt_bind_param($stmt_rincian, "i", $serviceId);
+mysqli_stmt_execute($stmt_rincian);
+$result_rincian = mysqli_stmt_get_result($stmt_rincian);
+
+$rincian_items = [];
+while ($row = mysqli_fetch_assoc($result_rincian)) {
+  $rincian_items[] = $row;
+}
+
+// Tutup statement
+mysqli_stmt_close($stmt_rincian);
+
+// Tutup koneksi database
+mysqli_close($link);
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -33,33 +56,17 @@ $data = mysqli_fetch_assoc($result);
   <div class="container mx-auto p-4">
     <h1 class="text-2xl font-bold mb-4">Detail Perbaikan</h1>
     <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-      <div class="flex py-2">
-        <strong class="w-1/3 flex-none">Nama Pemilik:</strong>
-        <span class="w-2/3 flex-grow"><?php echo $data['nama_pemilik']; ?></span>
-      </div>
-      <div class="flex py-2">
-        <strong class="w-1/3 flex-none">Alamat:</strong>
-        <span class="w-2/3 flex-grow"><?php echo $data['alamat']; ?></span>
-      </div>
-      <div class="flex py-2">
-        <strong class="w-1/3 flex-none">Nama Barang:</strong>
-        <span class="w-2/3 flex-grow"><?php echo $data['nama_barang']; ?></span>
-      </div>
-      <div class="flex py-2">
-        <strong class="w-1/3 flex-none">Merk Barang:</strong>
-        <span class="w-2/3 flex-grow"><?php echo $data['merk_barang']; ?></span>
-      </div>
-      <div class="flex py-2">
-        <strong class="w-1/3 flex-none">Jenis Barang:</strong>
-        <span class="w-2/3 flex-grow"><?php echo $data['jenis_barang']; ?></span>
-      </div>
-      <div class="flex py-2">
-        <strong class="w-1/3 flex-none">Keluhan:</strong>
-        <span class="w-2/3 flex-grow"><?php echo $data['keluhan_barang']; ?></span>
-      </div>
+      <p><strong>Nama Pemilik:</strong> <?php echo $data['nama_pemilik']; ?></p>
+      <p><strong>Alamat:</strong> <?php echo $data['alamat']; ?></p>
+      <p><strong>Nama Barang:</strong> <?php echo $data['nama_barang']; ?></p>
+      <p><strong>Merk Barang:</strong> <?php echo $data['merk_barang']; ?></p>
+      <p><strong>Jenis Barang:</strong> <?php echo $data['jenis_barang']; ?></p>
+      <p><strong>Keluhan:</strong> <?php echo $data['keluhan_barang']; ?></p>
+      <p><strong>Diagnosa Awal</strong> <?php echo $data['keterangan_awal']; ?></p>
+
     </div>
     <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-      <h2 class="text-xl font-bold mb-4">Keterangan Akhir</h2>
+      <h2 class="text-xl font-bold mb-4">Penanganan</h2>
       <textarea id="keteranganAkhir" class="w-full p-2 border rounded" rows="4" placeholder="Masukkan keterangan akhir..."></textarea>
       <button onclick="generateTable()" class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
         Rincian
@@ -100,20 +107,14 @@ $data = mysqli_fetch_assoc($result);
                     <th>Tipe</th>
                     <th>Harga</th>
                     <th>Total</th>
-                    <th>Aksi</th>
                 </tr>
             </thead>
             <tbody id="rincianTableBody">
             </tbody>
         </table>
-        <div class="mt-4">
-            <button onclick="tambahRincian()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">
-                Tambah Rincian
-            </button>
-            <button onclick="batalGenerateTable()" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-                Batal
-            </button>
-        </div>
+        <button onclick="tambahRincian()" class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Tambah Rincian
+        </button>
     `;
       tableContainer.classList.remove('hidden');
       tambahRincian();
@@ -128,7 +129,7 @@ $data = mysqli_fetch_assoc($result);
         <td><input type="text" class="border rounded p-1 w-full" name="nama"></td>
         <td><input type="number" class="border rounded p-1 w-full" name="jumlah" min="1" value="1" oninput="hitungTotal(this)"></td>
         <td><input type="text" class="border rounded p-1 w-full" name="tipe"></td>
-        <td><input type="number" class="border rounded p-1 w-full" name="harga" step="0.01" value="0" oninput="hitungTotal(this)"></td>
+        <td><input type="number" class="border rounded p-1 w-full" name="harga" step="0.01" value="0" readonly oninput="hitungTotal(this)"></td>
         <td><input type="number" class="border rounded p-1 w-full" name="total" step="0.01" readonly></td>
         <td><button onclick="hapusBaris(this)" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">Hapus</button></td>
     `;

@@ -57,7 +57,7 @@ mysqli_free_result($resultSedangDiperbaiki);
 
 
 // Query untuk menghitung barang yang selesai diperbaiki
-$querySelesaiDiperbaiki = "SELECT COUNT(*) AS total FROM barang WHERE status = 'Selesai Diperbaiki'";
+$querySelesaiDiperbaiki = "SELECT COUNT(*) AS total FROM barang WHERE status = 'Selesai Diperbaiki' AND lunas = 'Belum'";
 $resultSelesaiDiperbaiki = mysqli_query($link, $querySelesaiDiperbaiki);
 
 if (!$resultSelesaiDiperbaiki) {
@@ -131,7 +131,7 @@ INNER JOIN
 LEFT JOIN 
     detail_keluhan dk ON b.ID_Service = dk.ID_Service
 WHERE 
-    b.status = 'Selesai Diperbaiki' OR b.dikembalikan = 'Sudah'
+    (b.status = 'Selesai Diperbaiki' OR b.dikembalikan = 'Sudah') AND b.lunas = 'Belum'
 ORDER BY 
     b.status_updated_at DESC
 ";
@@ -384,14 +384,14 @@ mysqli_close($link);
           <tbody id="barangListPengambilan">
             <?php
             $no = 1;
-            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+            $pagePengambilan = isset($_GET['pagePengambilan']) ? (int)$_GET['pagePengambilan'] : 1;
             $maxLaporan = 5;
-            $offset = ($page - 1) * $maxLaporan;
-            $totalPages = ceil(count($barangListPengambilan) / $maxLaporan);
-            $paginatedList = array_slice($barangListPengambilan, $offset, $maxLaporan);
+            $offsetPengambilan = ($pagePengambilan - 1) * $maxLaporan;
+            $totalPagesPengambilan = ceil(count($barangListPengambilan) / $maxLaporan);
+            $paginatedListPengambilan = array_slice($barangListPengambilan, $offsetPengambilan, $maxLaporan);
 
-            if (count($paginatedList) > 0) {
-              foreach ($paginatedList as $row) {
+            if (count($paginatedListPengambilan) > 0) {
+              foreach ($paginatedListPengambilan as $row) {
                 $hubungiAmbilClass = $row["hubungi_ambil"] == 'Sudah' ? 'bg-white' : 'bg-pink-200';
 
                 echo "<tr class='hover:bg-gray-50' data-id='" . $row["ID_Service"] . "'>";
@@ -430,14 +430,14 @@ mysqli_close($link);
         <!-- Pagination -->
         <div class="mt-4 flex justify-center">
           <nav class="inline-flex">
-            <?php if ($page > 1) : ?>
-              <a href="?page=<?php echo $page - 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Previous</a>
+            <?php if ($pagePengambilan > 1) : ?>
+              <a href="?pagePengambilan=<?php echo $pagePengambilan - 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Previous</a>
             <?php endif; ?>
-            <?php for ($i = 1; $i <= $totalPages; $i++) : ?>
-              <a href="?page=<?php echo $i; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300 <?php if ($i == $page) echo 'bg-gray-300'; ?>"><?php echo $i; ?></a>
+            <?php for ($i = 1; $i <= $totalPagesPengambilan; $i++) : ?>
+              <a href="?pagePengambilan=<?php echo $i; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300 <?php if ($i == $page) echo 'bg-gray-300'; ?>"><?php echo $i; ?></a>
             <?php endfor; ?>
-            <?php if ($page < $totalPages) : ?>
-              <a href="?page=<?php echo $page + 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Next</a>
+            <?php if ($pagePengambilan < $totalPagesPengambilan) : ?>
+              <a href="?pagePengambilan=<?php echo $pagePengambilan + 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Next</a>
             <?php endif; ?>
           </nav>
         </div>
@@ -448,121 +448,90 @@ mysqli_close($link);
 
 <script>
   function tambahBtn() {
-    window.location.href = "/html/laporan.php"; // Ganti dengan path menuju halaman laporan.php yang benar
-  }
+      window.location.href = "/html/laporan.php";
+    }
+    
+  document.addEventListener('DOMContentLoaded', function() {
+    // Fungsi-fungsi utilitas
 
-  // Fungsi untuk logout
-  const logoutButton = document.getElementById("logoutBtn");
-  if (logoutButton) {
-    logoutButton.addEventListener("click", function(event) {
-      event.preventDefault(); // Mencegah aksi default dari anchor tag
+    function removeProcessedItems() {
+      const barangListPengambilan = document.getElementById('barangListPengambilan');
+      if (barangListPengambilan) {
+        const rows = barangListPengambilan.getElementsByTagName('tr');
+        for (let i = rows.length - 1; i >= 0; i--) {
+          const statusCell = rows[i].querySelector('td:nth-child(8)');
+          if (statusCell && statusCell.textContent.trim() === 'Lunas') {
+            rows[i].remove();
+          }
+        }
+      }
+    }
 
-      // Tampilkan sweetalert2 dialog
+    // Fungsi-fungsi untuk menangani interaksi UI
+    function showPopup(nama, noHp, description, id, type, row) {
       Swal.fire({
-        title: "Apakah kamu yakin ingin keluar?",
-        icon: "warning",
+        title: 'Kontak Pemilik',
+        html: `
+        <div class="text-left">
+          <p class="font-bold">Nama:</p>
+          <p>${nama}</p>
+          <p class="font-bold">Nomor HP:</p>
+          <p>${noHp}</p>
+          <p class="font-bold">Deskripsi:</p>
+          <div class="border p-2 rounded-md">${description}</div>
+        </div>
+      `,
         showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Ya, keluar",
-        cancelButtonText: "Batal",
+        showDenyButton: true,
+        confirmButtonText: 'Hubungi via WhatsApp',
+        denyButtonText: 'Sudah Dihubungi',
+        cancelButtonText: 'Tutup',
+        customClass: {
+          popup: 'rounded-lg shadow-lg p-6',
+          title: 'text-lg font-semibold',
+          htmlContainer: 'text-gray-700',
+          confirmButton: 'bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded',
+          denyButton: 'bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded',
+          cancelButton: 'bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded'
+        }
       }).then((result) => {
         if (result.isConfirmed) {
-          // Jika pengguna menekan tombol "Ya, keluar", arahkan ke halaman index.html
-          window.location.href = "/index.html";
+          if (!noHp.startsWith('62')) {
+            noHp = '62' + noHp.slice(1);
+          }
+          var whatsappUrl = `https://wa.me/${noHp}`;
+          window.open(whatsappUrl, '_blank');
+          showPopup(nama, noHp, description, id, type, row);
+        } else if (result.isDenied) {
+          if (type === 'pemberitahuan') {
+            updateHubungiKondisi(id);
+            row.querySelector('.show-description-with-options').setAttribute('data-hubungi', 'sudah');
+            Swal.fire('Kontak telah dihubungi!', '', 'success');
+          } else {
+            updateHubungiAmbil(id, row);
+          }
         }
       });
-    });
-  }
+    }
 
-  document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.show-contact').forEach(function(button) {
-      button.addEventListener('click', function() {
-        var nama = this.getAttribute('data-nama');
-        var noHp = this.getAttribute('data-nohp');
-        var description = this.getAttribute('data-description');
-        var id = this.getAttribute('data-id');
-        var type = this.getAttribute('data-type');
-        var row = this.closest('tr');
-
-        function showPopup() {
-          Swal.fire({
-            title: 'Kontak Pemilik',
-            html: `
-            <div class="text-left">
-              <p class="font-bold">Nama:</p>
-              <p>${nama}</p>
-              <p class="font-bold">Nomor HP:</p>
-              <p>${noHp}</p>
-              <p class="font-bold">Deskripsi:</p>
-              <div class="border p-2 rounded-md">${description}</div>
-            </div>
-          `,
-            showCancelButton: true,
-            showDenyButton: true,
-            confirmButtonText: 'Hubungi via WhatsApp',
-            denyButtonText: 'Sudah Dihubungi',
-            cancelButtonText: 'Tutup',
-            customClass: {
-              popup: 'rounded-lg shadow-lg p-6',
-              title: 'text-lg font-semibold',
-              htmlContainer: 'text-gray-700',
-              confirmButton: 'bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded',
-              denyButton: 'bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded',
-              cancelButton: 'bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded'
-            }
-          }).then((result) => {
-            if (result.isConfirmed) {
-              if (!noHp.startsWith('62')) {
-                noHp = '62' + noHp.slice(1);
-              }
-              var whatsappUrl = `https://wa.me/${noHp}`;
-              window.open(whatsappUrl, '_blank');
-              showPopup(); // Tampilkan popup lagi setelah membuka WhatsApp
-            } else if (result.isDenied) {
-              if (type === 'pemberitahuan') {
-                updateHubungiKondisi(id);
-                row.querySelector('.show-description-with-options').setAttribute('data-hubungi', 'sudah');
-                Swal.fire('Kontak telah dihubungi!', '', 'success');
-              } else {
-                updateHubungiAmbil(id, row);
-              }
-            }
-          });
+    function konfirmasiPengambilan(id) {
+      Swal.fire({
+        title: 'Konfirmasi Pengambilan',
+        text: 'Apakah Anda yakin ingin mengkonfirmasi pengambilan barang ini?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ya, Konfirmasi',
+        cancelButtonText: 'Batal'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          checkPricingAndRedirect(id);
         }
-        showPopup(); // Panggil fungsi untuk menampilkan popup
       });
-    });
+    }
 
-    document.querySelectorAll('.kirim-konfirmasi').forEach(function(button) {
-      button.addEventListener('click', function() {
-        var id = this.getAttribute('data-id');
-        var select = this.previousElementSibling;
-        var konfirmasi = select.value;
-
-        if (konfirmasi === '') {
-          Swal.fire('Error', 'Silakan pilih konfirmasi terlebih dahulu', 'error');
-          return;
-        }
-
-        fetch('/php/update_konfirmasi_keterangan.php', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'id=' + id + '&konfirmasi=' + konfirmasi
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              Swal.fire('Sukses', 'Konfirmasi keterangan berhasil diupdate', 'success');
-            } else {
-              Swal.fire('Error', 'Gagal mengupdate konfirmasi keterangan', 'error');
-            }
-          });
-      });
-    });
-
+    // Fungsi-fungsi untuk menangani permintaan ke server
     function updateHubungiAmbil(id, row) {
       fetch('/php/update_hubungi_ambil.php', {
           method: 'POST',
@@ -577,16 +546,11 @@ mysqli_close($link);
               row.querySelector('td:nth-child(5)').classList.remove('bg-pink-200');
               row.querySelector('td:nth-child(5)').classList.add('bg-white');
               row.querySelector('td:last-child').innerHTML = "<button class='confirm-pickup bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded' data-id='" + id + "'>Konfirmasi Pengambilan</button>";
-              addConfirmPickupListener(row.querySelector('.confirm-pickup'));
             });
           } else {
             Swal.fire('Error!', 'Gagal mengupdate status.', 'error');
           }
         });
-    }
-
-    function updateHubungiStatus(button) {
-      button.setAttribute('data-hubungi', 'sudah');
     }
 
     function updateHubungiKondisi(id) {
@@ -601,13 +565,91 @@ mysqli_close($link);
           if (data.success) {
             var contactButton = document.querySelector(`.show-contact[data-id="${id}"]`);
             if (contactButton) {
-              updateHubungiStatus(contactButton);
+              contactButton.setAttribute('data-hubungi', 'sudah');
             }
           } else {
             Swal.fire('Error!', 'Gagal mengupdate status.', 'error');
           }
         });
     }
+
+    function updateKonfirmasiKeterangan(id, konfirmasi) {
+      fetch('/php/update_konfirmasi_keterangan.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: 'id=' + id + '&konfirmasi=' + konfirmasi
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire('Sukses', 'Konfirmasi keterangan berhasil diupdate', 'success').then(() => {
+              const row = document.querySelector(`tr[data-id="${id}"]`);
+              if (row) {
+                row.remove();
+              }
+            });
+          } else {
+            Swal.fire('Error', 'Gagal mengupdate konfirmasi keterangan', 'error');
+          }
+        });
+    }
+
+    function checkPricingAndRedirect(id) {
+      fetch('/php/check_pricing.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: 'id=' + id
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.pricingFilled) {
+            window.location.href = `/html/nota.php?id=${id}`;
+          } else {
+            window.location.href = `/html/detailPembayaran.php?id=${id}`;
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          Swal.fire('Error', 'Terjadi kesalahan saat memeriksa harga', 'error');
+        });
+    }
+
+    // Event listeners
+    const logoutButton = document.getElementById("logoutBtn");
+    if (logoutButton) {
+      logoutButton.addEventListener("click", function(event) {
+        event.preventDefault();
+        Swal.fire({
+          title: "Apakah kamu yakin ingin keluar?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Ya, keluar",
+          cancelButtonText: "Batal",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            window.location.href = "/index.html";
+          }
+        });
+      });
+    }
+
+    document.querySelectorAll('.show-contact').forEach(function(button) {
+      button.addEventListener('click', function() {
+        var nama = this.getAttribute('data-nama');
+        var noHp = this.getAttribute('data-nohp');
+        var description = this.getAttribute('data-description');
+        var id = this.getAttribute('data-id');
+        var type = this.getAttribute('data-type');
+        var row = this.closest('tr');
+        showPopup(nama, noHp, description, id, type, row);
+      });
+    });
 
     document.querySelectorAll('.show-description-with-options').forEach(function(button) {
       button.addEventListener('click', function() {
@@ -665,19 +707,11 @@ mysqli_close($link);
           }
         });
       });
-      // Tambahkan event listener untuk tombol Konfirmasi Pengambilan
-      document.querySelectorAll('.confirm-pickup').forEach(function(button) {
-        button.addEventListener('click', function() {
-          const id = this.getAttribute('data-id');
-          konfirmasiPengambilan(id);
-        });
-      });
     });
 
     document.querySelectorAll('.show-description').forEach(function(button) {
       button.addEventListener('click', function() {
         var description = this.getAttribute('data-description');
-
         Swal.fire({
           title: 'Deskripsi Perbaikan',
           html: `<div class="text-left border p-2 rounded-md">${description}</div>`,
@@ -692,56 +726,16 @@ mysqli_close($link);
       });
     });
 
-    function updateKonfirmasiKeterangan(id, konfirmasi) {
-      fetch('/php/update_konfirmasi_keterangan.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: 'id=' + id + '&konfirmasi=' + konfirmasi
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            Swal.fire('Sukses', 'Konfirmasi keterangan berhasil diupdate', 'success').then(() => {
-              // Hapus baris terkait dari tabel
-              const row = document.querySelector(`tr[data-id="${id}"]`);
-              if (row) {
-                row.remove();
-              }
-            });
-          } else {
-            Swal.fire('Error', 'Gagal mengupdate konfirmasi keterangan', 'error');
-          }
-        });
-    }
-    // Tambahkan fungsi konfirmasiPengambilan
-    function konfirmasiPengambilan(id) {
-      Swal.fire({
-        title: 'Konfirmasi Pengambilan',
-        text: "Apakah Anda yakin ingin mengkonfirmasi pengambilan barang ini?",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Ya, konfirmasi',
-        cancelButtonText: 'Batal'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // Redirect ke halaman nota
-          window.location.href = `/html/nota.php?id=${id}`;
-        }
-      });
-    }
-    
-    // Fungsi untuk menambahkan event listener ke tombol Konfirmasi Pengambilan yang baru
-    function addConfirmPickupListener(button) {
-      button.addEventListener('click', function() {
-        const id = this.getAttribute('data-id');
+    // Menggunakan delegasi event untuk tombol "Konfirmasi Pengambilan"
+    document.body.addEventListener('click', function(event) {
+      if (event.target && event.target.classList.contains('confirm-pickup')) {
+        const id = event.target.getAttribute('data-id');
         konfirmasiPengambilan(id);
-      });
-    }
+      }
+    });
 
+    // Panggil fungsi ini saat halaman dimuat
+    removeProcessedItems();
   });
 </script>
 

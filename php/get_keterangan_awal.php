@@ -21,4 +21,3 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
 } else {
     echo json_encode(["success" => false, "error" => "Invalid request method"]);
 }
-?>

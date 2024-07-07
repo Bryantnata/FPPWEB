@@ -128,13 +128,10 @@ mysqli_close($link);
     <nav class="mt-4">
       <ul>
         <li>
-          <a href="/html/kasir-Dashboard.html" class="block py-2 px-4 hover:bg-gray-700 active:bg-blue-500" id="dashboardBtn">Dashboard</a>
+          <a href="/html/admin-Dashboard.php" class="block py-2 px-4 hover:bg-gray-700 active:bg-blue-500" id="dashboardBtn">Dashboard</a>
         </li>
         <li>
-          <a href="/html/kasir-Transaksi.html" class="block py-2 px-4 hover:bg-gray-700" id="transaksiBtn">Transaksi</a>
-        </li>
-        <li>
-          <a href="/html/kasir-Pembayaran.html" class="block py-2 px-4 hover:bg-gray-700" id="pembayaranBtn">Pembayaran</a>
+          <a href="/html/admin-" class="block py-2 px-4 hover:bg-gray-700" id="transaksiBtn">Akun</a>
         </li>
         <li>
           <a href="/html/kasir-Riwayat.html" class="block py-2 px-4 hover:bg-gray-700" id="riwayatBtn">Riwayat</a>

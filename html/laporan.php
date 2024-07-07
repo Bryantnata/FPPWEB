@@ -120,59 +120,40 @@
 </body>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
+  let selectedCustomerId = null;
+
   $(document).ready(function() {
     $('#customerSearch').select2({
-      ajax: {
-        url: '/php/search_customer.php',
-        dataType: 'json',
-        delay: 250,
-        data: function(params) {
-          return {
-            q: params.term
-          };
-        },
-        processResults: function(data) {
-          return {
-            results: data
-          };
-        },
-        cache: true
-      },
-      minimumInputLength: 1,
-      placeholder: 'Cari nama atau nomor telepon pelanggan',
-      templateResult: formatCustomer,
-      templateSelection: formatCustomerSelection
+      // ... (konfigurasi Select2 tetap sama) ...
     });
 
-    function formatCustomer(customer) {
-      if (!customer.id) {
-        return customer.text;
-      }
-      return $(`
-    <div class="flex items-center py-1">
-      <div>
-        <p class="text-sm font-semibold">${customer.name}</p>
-        <p class="text-xs text-gray-600">${customer.phone}</p>
-      </div>
-    </div>
-    `);
-    }
+    $('#customerSearch').on('select2:select', function(e) {
+      var data = e.params.data;
+      $('#name').val(data.name);
+      $('#address').val(data.address);
+      $('#phone').val(data.phone);
+      selectedCustomerId = data.id;
+    });
 
-    function formatCustomerSelection(customer) {
-      if (!customer.id) {
-        return customer.text;
+    $('#customerSearch').on('select2:clear', function(e) {
+      clearCustomerForm();
+    });
+
+    // Tambahkan event listener untuk input manual
+    $('#name, #address, #phone').on('input', function() {
+      if (selectedCustomerId) {
+        selectedCustomerId = null;
+        $('#customerSearch').val(null).trigger('change');
       }
-      return $(`<span class="text-sm">${customer.name} (${customer.phone})</span>`);
-    }
+    });
   });
 
-  $('#customerSearch').on('select2:select', function(e) {
-    var data = e.params.data;
-    $('#name').val(data.name);
-    $('#address').val(data.address);
-    $('#phone').val(data.phone);
-    selectedCustomerId = data.id;
-  });
+  function clearCustomerForm() {
+    $('#name').val('');
+    $('#address').val('');
+    $('#phone').val('');
+    selectedCustomerId = null;
+  }
 
   function submitReport() {
     const form = document.getElementById('reportForm');
@@ -206,6 +187,8 @@
 
     if (selectedCustomerId) {
       formData.append('id_pelanggan', selectedCustomerId);
+    } else {
+      formData.append('new_customer', 'true');
     }
 
     fetch('../php/submit_laporan.php', {

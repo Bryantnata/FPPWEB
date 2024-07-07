@@ -50,15 +50,24 @@ try {
     }
 
     // Update status barang
-    $status = ($kondisi === 'tidak bisa diperbaiki') ? 'Dibatalkan' : 'Sedang Diperbaiki';
-    $updateQuery = "UPDATE barang SET status = ?, hubungi_kondisi = 'Sudah' WHERE ID_Service = ?";
+    if ($kondisi === 'tidak bisa diperbaiki') {
+        $status = 'Belum Diperbaiki';
+        $hubungi_kondisi = 'Sudah';
+    } elseif ($kondisi === 'bisa diperbaiki') {
+        $status = 'Belum Diperbaiki';
+        $hubungi_kondisi = 'Belum';
+    } else {
+        $status = 'Dalam Proses';
+        $hubungi_kondisi = 'Sudah';
+    }
+
+    $updateQuery = "UPDATE barang SET status = ?, hubungi_kondisi = ? WHERE ID_Service = ?";
     $updateStmt = mysqli_prepare($link, $updateQuery);
-    mysqli_stmt_bind_param($updateStmt, "si", $status, $serviceId);
+    mysqli_stmt_bind_param($updateStmt, "ssi", $status, $hubungi_kondisi, $serviceId);
 
     if (!mysqli_stmt_execute($updateStmt)) {
         throw new Exception(mysqli_error($link));
     }
-
 
     echo json_encode(['success' => true]);
 } catch (Exception $e) {
