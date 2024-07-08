@@ -21,20 +21,18 @@ function executeQuery($link, $query)
 $queryPeriksa = "
 SELECT 
     b.*, 
-    p.nama AS Nama_Pemilik
+    p.nama AS Nama_Pemilik,
+    dk.keterangan_awal
 FROM 
     barang b
 INNER JOIN 
     pelanggan p ON b.id_pelanggan = p.id_pelanggan
+LEFT JOIN 
+    detail_keluhan dk ON b.ID_Service = dk.ID_Service
 WHERE 
     b.status = 'Belum Diperbaiki' 
     AND b.hubungi_kondisi = 'Belum' 
-    AND NOT EXISTS (
-        SELECT 1
-        FROM detail_keluhan dk
-        WHERE dk.ID_Service = b.ID_Service
-          AND (dk.keterangan_awal IS NULL OR dk.keterangan_awal = '')
-    )
+    AND (dk.keterangan_awal IS NULL OR dk.keterangan_awal = '')
 ORDER BY 
     b.tanggal_input ASC;
 ";
@@ -62,7 +60,7 @@ FROM barang b
 INNER JOIN pelanggan p ON b.id_pelanggan = p.id_pelanggan
 LEFT JOIN detail_keluhan dk ON b.ID_Service = dk.ID_Service
 WHERE b.status = 'Belum Diperbaiki'
-  AND b.hubungi_kondisi = 2
+  AND b.hubungi_kondisi = 'Sudah'
   AND dk.konfirmasi_keterangan = 'Eksekusi'
   AND dk.kondisi = 'bisa diperbaiki'
 ORDER BY b.tanggal_input ASC
@@ -99,6 +97,15 @@ WHERE
 ORDER BY 
     b.tanggal_input ASC
 ";
+
+$result = mysqli_query($link, $queryDibatalkan);
+
+$barangListDibatalkan = [];
+if (mysqli_num_rows($result) > 0) {
+  while ($row = mysqli_fetch_assoc($result)) {
+    $barangListDibatalkan[] = $row;
+  }
+}
 
 
 // Eksekusi query dan simpan hasilnya
@@ -269,7 +276,7 @@ mysqli_close($link);
               <a href="?page_periksa=<?php echo $pagePeriksa - 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Previous</a>
             <?php endif; ?>
             <?php for ($i = 1; $i <= $totalPagesPeriksa; $i++) : ?>
-              <a href="?page_periksa=<?php echo $i; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300 <?php if ($i == $pagePeriksa) ; ?>"><?php echo $i; ?></a>
+              <a href="?page_periksa=<?php echo $i; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300 <?php if ($i == $pagePeriksa); ?>"><?php echo $i; ?></a>
             <?php endfor; ?>
             <?php if ($pagePeriksa < $totalPagesPeriksa) : ?>
               <a href="?page_periksa=<?php echo $pagePeriksa + 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Next</a>
@@ -409,7 +416,7 @@ mysqli_close($link);
               <a href="?page_Pengerjaan=<?php echo $pagePengerjaan - 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Previous</a>
             <?php endif; ?>
             <?php for ($i = 1; $i <= $totalPagesPengerjaan; $i++) : ?>
-              <a href="?page_Pengerjaan=<?php echo $i; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300 <?php if ($i == $pagePengerjaan) ; ?>"><?php echo $i; ?></a>
+              <a href="?page_Pengerjaan=<?php echo $i; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300 <?php if ($i == $pagePengerjaan); ?>"><?php echo $i; ?></a>
             <?php endfor; ?>
             <?php if ($pagePengerjaan < $totalPagesPengerjaan) : ?>
               <a href="?page_Pengerjaan=<?php echo $pagePengerjaan + 1; ?>" class="px-3 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">Next</a>
@@ -426,15 +433,15 @@ mysqli_close($link);
         <table class="w-full border-collapse border border-gray-400">
           <thead>
             <tr class="bg-gray-200">
-              <th class="px-4 py-2">No</th>
-              <th class="px-4 py-2">ID Service</th>
-              <th class="px-4 py-2">Tanggal Masuk</th>
-              <th class="px-4 py-2">Nama Barang</th>
-              <th class="px-4 py-2">Merk Barang</th>
-              <th class="px-4 py-2">Tipe</th>
-              <th class="px-4 py-2">Keluhan</th>
-              <th class="px-4 py-2">Keterangan</th>
-              <th class="px-4 py-2">Aksi</th>
+              <th class="px-4 py-2 border">No</th>
+              <th class="px-4 py-2 border">ID Service</th>
+              <th class="px-4 py-2 border">Tanggal Masuk</th>
+              <th class="px-4 py-2 border">Nama Barang</th>
+              <th class="px-4 py-2 border">Merk Barang</th>
+              <th class="px-4 py-2 border">Tipe</th>
+              <th class="px-4 py-2 border">Keluhan</th>
+              <th class="px-4 py-2 border">Keterangan</th>
+              <th class="px-4 py-2 border">Aksi</th>
             </tr>
           </thead>
           <tbody id="barangListDibatalkan">
@@ -457,10 +464,10 @@ mysqli_close($link);
                   <td class="px-4 py-2 border"><?php echo $row['ID_Service']; ?></td>
                   <td class="px-4 py-2 border"><?php echo $row['tanggal_input']; ?></td>
                   <td class="px-4 py-2 border"><?php echo $row['nama_barang']; ?></td>
-                  <th class="px-4 py-2 border"><?php echo $row['merk_barang']; ?></td>
-                  <th class="px-4 py-2 border"><?php echo $row['jenis_barang']; ?></td>
-                  <th class="px-4 py-2 border"><?php echo $row['keluhan_barang']; ?></td>
-                  <th class="px-4 py-2 border"><?php echo $row['konfirmasi_keterangan']; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['merk_barang']; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['jenis_barang']; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['keluhan_barang']; ?></td>
+                  <td class="px-4 py-2 border"><?php echo $row['konfirmasi_keterangan']; ?></td>
                   <td class="px-4 py-2 border text-center">
                     <button class="confirm-dikembalikan bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded" data-id="<?php echo $row['ID_Service']; ?>">
                       Dikembalikan
@@ -515,87 +522,42 @@ mysqli_close($link);
         });
       });
     }
-    const analisisButtons = document.querySelectorAll('.confirm-analisis');
-    analisisButtons.forEach(button => {
+    document.querySelectorAll('.confirm-analisis').forEach(button => {
       button.addEventListener('click', function() {
         const serviceId = this.getAttribute('data-id');
         const keluhan = this.getAttribute('data-keluhan');
 
-        Swal.fire({
-          title: 'Analisis Barang',
-          html: '<div class="swal2-content" style="padding: 0 1rem;">' +
-            '<div class="mb-2">' +
-            '<label for="keluhan-barang" class="block text-sm font-medium text-gray-700">Keluhan Barang:</label>' +
-            `<textarea id="keluhan-barang" class="swal2-textarea" rows="2" style="font-size: 0.875rem; padding: 0.5rem;" readonly>${keluhan}</textarea>` +
-            '</div>' +
-            '<div class="mb-2">' +
-            '<label for="keterangan-awal" class="block text-sm font-medium text-gray-700">Keterangan Awal:</label>' +
-            '<textarea id="keterangan-awal" class="swal2-textarea" rows="2" style="font-size: 0.875rem; padding: 0.5rem;"></textarea>' +
-            '</div>' +
-            '<div class="mb-2">' +
-            '<label for="kondisi" class="block text-sm font-medium text-gray-700">Kondisi:</label>' +
-            '<select id="kondisi" class="swal2-select" style="font-size: 0.875rem; padding: 0.5rem;">' +
-            '<option value="bisa diperbaiki">Bisa diperbaiki</option>' +
-            '<option value="tidak bisa diperbaiki">Tidak bisa diperbaiki</option>' +
-            '</select>' +
-            '</div>' +
-            '</div>',
-          showCancelButton: true,
-          confirmButtonText: 'Kirim',
-          cancelButtonText: 'Batal',
-          preConfirm: () => {
-            const keteranganAwal = Swal.getPopup().querySelector('#keterangan-awal').value;
-            const kondisi = Swal.getPopup().querySelector('#kondisi').value;
-
-            if (!keteranganAwal) {
-              Swal.showValidationMessage('Keterangan awal harus diisi');
-              return false;
+        // Kirim permintaan langsung ke server
+        fetch('../php/analisis.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              serviceId: serviceId,
+              keluhan: keluhan,
+              keteranganAwal: "Analisis otomatis", // Atau bisa dikosongkan jika tidak diperlukan
+              kondisi: "bisa diperbaiki" // Atau nilai default lainnya
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              Swal.fire('Sukses', 'Analisis berhasil dikirim', 'success').then(() => {
+                // Hapus baris dari tabel
+                this.closest('tr').remove();
+                updateRowNumbers();
+                updateTotalPeriksa();
+                refreshDibatalkanTable();
+              });
+            } else {
+              Swal.fire('Error', 'Gagal mengirim analisis', 'error');
             }
-
-            return fetch('../php/analisis.php', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                serviceId: serviceId,
-                keluhan: keluhan,
-                keteranganAwal: keteranganAwal,
-                kondisi: kondisi
-              })
-            }).then(response => {
-              if (!response.ok) {
-                throw new Error('Gagal mengirim data');
-              }
-              return response.json();
-            }).catch(error => {
-              Swal.showValidationMessage(`Request failed: ${error.message}`);
-            });
-          }
-        }).then((result) => {
-          if (result.isConfirmed && result.value.success) {
-            Swal.fire('Sukses', 'Analisis berhasil dikirim', 'success').then(() => {
-              // Hapus baris dari tabel
-              const row = this.closest('tr');
-              if (row) {
-                row.remove();
-              }
-              // Periksa apakah tabel sudah kosong
-              const tbody = document.querySelector('#barangPeriksa');
-              if (tbody.children.length === 0) {
-                // Jika tabel kosong, tambahkan baris "Tidak ada data"
-                const noDataRow = document.createElement('tr');
-                noDataRow.innerHTML = '<td colspan="8" class="px-4 py-2 text-center">Tidak ada laporan.</td>';
-                tbody.appendChild(noDataRow);
-              }
-              // Update nomor urut dan total periksa
-              updateRowNumbers();
-              updateTotalPeriksa();
-            });
-          } else if (result.isConfirmed) {
-            Swal.fire('Error', 'Gagal mengirim analisis', 'error');
-          }
-        });
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', 'Terjadi kesalahan saat mengirim analisis', 'error');
+          });
       });
     });
 
@@ -646,6 +608,7 @@ mysqli_close($link);
       button.addEventListener('click', function() {
         const id = this.getAttribute('data-id');
         konfirmasiDikembalikan(id);
+
       });
     });
   });
@@ -654,85 +617,111 @@ mysqli_close($link);
     window.location.href = `detail.php?id=${serviceId}`;
   }
 
-  function konfirmasiDikembalikan(id, button) {
+  function konfirmasiDikembalikan(id) {
     Swal.fire({
       title: 'Konfirmasi Pengembalian',
       text: "Apakah Anda yakin ingin mengembalikan barang ini?",
       icon: 'warning',
-      input: 'textarea',
-      inputLabel: 'Alasan Pengembalian',
-      inputPlaceholder: 'Masukkan alasan pengembalian...',
-      inputAttributes: {
-        'aria-label': 'Masukkan alasan pengembalian'
-      },
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
       confirmButtonText: 'Ya, kembalikan',
-      cancelButtonText: 'Batal',
-      inputValidator: (value) => {
-        if (!value) {
-          return 'Anda harus memasukkan alasan pengembalian!'
-        }
-      }
+      cancelButtonText: 'Batal'
     }).then((result) => {
       if (result.isConfirmed) {
-        kembalikanBarang(id, button, result.value);
+        kembalikanBarang(id);
       }
     });
+  }
 
-
-    function kembalikanBarang(id) {
-      fetch('/php/kembalikan_barang.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: 'id=' + id
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            Swal.fire(
-              'Berhasil!',
-              'Barang telah dikembalikan.',
-              'success'
-            ).then(() => {
-              // Hapus baris dari tabel
-              const row = document.querySelector(`#barangListDibatalkan tr[data-id="${id}"]`);
-              if (row) {
-                row.remove();
-              }
-
-              // Periksa apakah tabel sudah kosong
-              const tbody = document.querySelector('#barangListDibatalkan');
-              if (tbody.children.length === 0) {
-                // Jika tabel kosong, tambahkan baris "Tidak ada data"
-                const noDataRow = document.createElement('tr');
-                noDataRow.innerHTML = '<td colspan="9" class="px-4 py-2 text-center">Tidak ada data barang yang dibatalkan.</td>';
-                tbody.appendChild(noDataRow);
-              }
-
-              // Opsional: Update nomor urut
-              updateRowNumbers();
-            });
-          } else {
-            Swal.fire(
-              'Gagal!',
-              'Terjadi kesalahan saat mengembalikan barang.',
-              'error'
-            );
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
+  function kembalikanBarang(id) {
+    fetch('/php/kembalikan_barang.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'id=' + id
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
           Swal.fire(
-            'Error!',
-            'Terjadi kesalahan pada server.',
+            'Berhasil!',
+            'Barang telah dikembalikan.',
+            'success'
+          ).then(() => {
+            refreshDibatalkanTable();
+          });
+        } else {
+          Swal.fire(
+            'Gagal!',
+            'Terjadi kesalahan saat mengembalikan barang.',
             'error'
           );
-        });
-    }
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        Swal.fire(
+          'Error!',
+          'Terjadi kesalahan pada server.',
+          'error'
+        );
+      });
+  }
+
+
+  function kembalikanBarang(id) {
+    fetch('/php/kembalikan_barang.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'id=' + id
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          Swal.fire(
+            'Berhasil!',
+            'Barang telah dikembalikan.',
+            'success'
+          ).then(() => {
+            // Hapus baris dari tabel
+            const row = document.querySelector(`#barangListDibatalkan tr[data-id="${id}"]`);
+            if (row) {
+              row.remove();
+            }
+
+            // Periksa apakah tabel sudah kosong
+            const tbody = document.querySelector('#barangListDibatalkan');
+            if (tbody.children.length === 0) {
+              // Jika tabel kosong, tambahkan baris "Tidak ada data"
+              const noDataRow = document.createElement('tr');
+              noDataRow.innerHTML = '<td colspan="9" class="px-4 py-2 text-center">Tidak ada data barang yang dibatalkan.</td>';
+              tbody.appendChild(noDataRow);
+            }
+
+            // Opsional: Update nomor urut
+            updateRowNumbers();
+            refreshDibatalkanTable(); // Tambahkan ini
+          });
+        } else {
+          Swal.fire(
+            'Gagal!',
+            'Terjadi kesalahan saat mengembalikan barang.',
+            'error'
+          );
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        Swal.fire(
+          'Error!',
+          'Terjadi kesalahan pada server.',
+          'error'
+        );
+      });
 
     // Fungsi untuk mengupdate nomor urut
     function updateRowNumbers() {
@@ -753,6 +742,53 @@ mysqli_close($link);
       if (totalElement) {
         totalElement.textContent = total;
       }
+    }
+
+    function refreshDibatalkanTable() {
+      fetch('get_barang_dibatalkan.php')
+        .then(response => response.json())
+        .then(data => {
+          const tbody = document.querySelector('#barangListDibatalkan');
+          tbody.innerHTML = '';
+          if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" class="px-4 py-2 border text-center">Tidak ada laporan.</td></tr>';
+          } else {
+            data.forEach((row, index) => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = `
+                        <td class="px-4 py-2 border">${index + 1}</td>
+                        <td class="px-4 py-2 border">${row.ID_Service}</td>
+                        <td class="px-4 py-2 border">${row.tanggal_input}</td>
+                        <td class="px-4 py-2 border">${row.nama_barang}</td>
+                        <td class="px-4 py-2 border">${row.merk_barang}</td>
+                        <td class="px-4 py-2 border">${row.jenis_barang}</td>
+                        <td class="px-4 py-2 border">${row.keluhan_barang}</td>
+                        <td class="px-4 py-2 border">${row.konfirmasi_keterangan}</td>
+                        <td class="px-4 py-2 border text-center">
+                            <button class="confirm-dikembalikan bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded" data-id="${row.ID_Service}">
+                                Dikembalikan
+                            </button>
+                        </td>
+                    `;
+              tbody.appendChild(tr);
+            });
+          }
+          // Reattach event listeners for new buttons
+          attachDikembalikanListeners();
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          Swal.fire('Error', 'Gagal memuat data barang dibatalkan', 'error');
+        });
+    }
+
+    function attachDikembalikanListeners() {
+      document.querySelectorAll('.confirm-dikembalikan').forEach(button => {
+        button.addEventListener('click', function() {
+          const id = this.getAttribute('data-id');
+          konfirmasiDikembalikan(id);
+        });
+      });
     }
   }
 </script>

@@ -41,7 +41,6 @@ mysqli_stmt_close($stmt_rincian);
 mysqli_close($link);
 
 ?>
-<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -53,36 +52,89 @@ mysqli_close($link);
 </head>
 
 <body class="bg-gray-100">
-  <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4">Detail Perbaikan</h1>
-    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-      <p><strong>Nama Pemilik:</strong> <?php echo $data['nama_pemilik']; ?></p>
-      <p><strong>Alamat:</strong> <?php echo $data['alamat']; ?></p>
-      <p><strong>Nama Barang:</strong> <?php echo $data['nama_barang']; ?></p>
-      <p><strong>Merk Barang:</strong> <?php echo $data['merk_barang']; ?></p>
-      <p><strong>Jenis Barang:</strong> <?php echo $data['jenis_barang']; ?></p>
-      <p><strong>Keluhan:</strong> <?php echo $data['keluhan_barang']; ?></p>
-      <p><strong>Diagnosa Awal</strong> <?php echo $data['keterangan_awal']; ?></p>
-
+  <div class="container mx-auto p-4 max-w-4xl">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">Detail Perbaikan</h1>
     </div>
-    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-      <h2 class="text-xl font-bold mb-4">Penanganan</h2>
-      <textarea id="keteranganAkhir" class="w-full p-2 border rounded" rows="4" placeholder="Masukkan keterangan akhir..."></textarea>
-      <button onclick="generateTable()" class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+    <div class="bg-white shadow-lg rounded-lg px-8 pt-6 pb-8 mb-6">
+      <table class="w-full">
+        <tr>
+          <td class="font-semibold py-2">Nama Pemilik</td>
+          <td>:</td>
+          <td><?php echo $data['nama_pemilik']; ?></td>
+        </tr>
+        <tr>
+          <td class="font-semibold py-2">Alamat</td>
+          <td>:</td>
+          <td><?php echo $data['alamat']; ?></td>
+        </tr>
+        <tr>
+          <td class="font-semibold py-2">No. HP</td>
+          <td>:</td>
+          <td><?php echo $data['no_hp']; ?></td>
+        </tr>
+        <tr>
+          <td class="font-semibold py-2">Nama Barang</td>
+          <td>:</td>
+          <td><?php echo $data['nama_barang']; ?></td>
+        </tr>
+        <tr>
+          <td class="font-semibold py-2">Merk Barang</td>
+          <td>:</td>
+          <td><?php echo $data['merk_barang']; ?></td>
+        </tr>
+        <tr>
+          <td class="font-semibold py-2">Jenis Barang</td>
+          <td>:</td>
+          <td><?php echo $data['jenis_barang']; ?></td>
+        </tr>
+        <tr>
+          <td class="font-semibold py-2">Keluhan</td>
+          <td>:</td>
+          <td><?php echo $data['keluhan_barang']; ?></td>
+        </tr>
+        <tr>
+          <td class="font-semibold py-2">Diagnosa Awal</td>
+          <td>:</td>
+          <td><?php echo $data['keterangan_awal']; ?></td>
+        </tr>
+        <tr>
+          <td class="font-semibold py-2">Nama Teknisi</td>
+          <td >:</td>
+          <td><?php echo $data['nama_teknisi'] ?? $_SESSION['nama']; ?></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="bg-white shadow-lg rounded-lg px-8 pt-6 pb-8 mb-6">
+      <h2 class="text-2xl font-bold mb-4 text-gray-800">Penanganan</h2>
+      <textarea id="keteranganAkhir" class="w-full p-2 border rounded resize-none" rows="4" placeholder="Masukkan keterangan akhir..."></textarea>
+      <button onclick="generateTable()" class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300">
         Rincian
       </button>
     </div>
-    <div id="tableContainer" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 hidden">
+
+    <div id="tableContainer" class="bg-white shadow-lg rounded-lg px-8 pt-6 pb-8 mb-6 hidden">
       <!-- Tabel rincian akan ditampilkan di sini -->
     </div>
-    <button onclick="selesaikanPerbaikan()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-      Selesaikan Perbaikan
-    </button>
+
+    <div class="flex justify-between">
+      <button onclick="kembali()" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+        kembali
+      </button>
+      <button onclick="selesaikanPerbaikan()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+        Selesaikan Perbaikan
+      </button>
+    </div>
   </div>
 
   <script>
     let rincianItems = [];
 
+    function kembali() {
+      const keteranganAkhir = document.getElementById('keteranganAkhir').value.trim();
+      window.location.href = 'teknisi-Dashboard.php';
+    }
     function generateTable() {
       const keteranganAkhir = document.getElementById('keteranganAkhir').value.trim();
 
