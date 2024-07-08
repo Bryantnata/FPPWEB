@@ -40,7 +40,7 @@ mysqli_close($link);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Riwayat</title>
+    <title>Admin-Riwayat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -55,18 +55,18 @@ mysqli_close($link);
         </div>
         <!-- Sidebar Content -->
         <nav class="mt-4">
-      <ul>
-        <li>
-          <a href="/html/admin-Dashboard.php" class="block py-2 px-4 hover:bg-gray-700" id="dashboardBtn">Dashboard</a>
-        </li>
-        <li>
-          <a href="/html/admin-akun.php" class="block py-2 px-4 hover:bg-gray-700" id="akunBtn">Akun</a>
-        </li>
-        <li>
-          <a href="/html/admin-riwayat.php" class="block py-2 px-4 text-gray-800 bg-gray-500" id="riwayatBtn">Riwayat</a>
-        </li>
-      </ul>
-    </nav>
+            <ul>
+                <li>
+                    <a href="/html/admin-Dashboard.php" class="block py-2 px-4 hover:bg-gray-700" id="dashboardBtn">Dashboard</a>
+                </li>
+                <li>
+                    <a href="/html/admin-akun.php" class="block py-2 px-4 hover:bg-gray-700" id="akunBtn">Akun</a>
+                </li>
+                <li>
+                    <a href="/html/admin-riwayat.php" class="block py-2 px-4 text-gray-800 bg-gray-500" id="riwayatBtn">Riwayat</a>
+                </li>
+            </ul>
+        </nav>
         <!-- Logout Button -->
         <div class="absolute bottom-10 left-0 w-full font-bold lg:block">
             <a href="#" id="logoutBtn" class="block w-2/3 py-3 mx-auto text-sm text-white text-center bg-red-600 hover:bg-red-700 rounded-md z-10">Log Out</a>
@@ -76,7 +76,11 @@ mysqli_close($link);
         <div class="container mx-auto py-8">
             <h1 class="text-3xl font-bold mb-8 text-center">Daftar Riwayat</h1>
             <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-                <div class="mb-4 flex justify-end">
+
+                <div class="mb-4 flex justify-between items-center">
+                    <button onclick="deleteAllRiwayat()" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                        Delete All
+                    </button>
                     <input id="searchInput" type="text" class="w-1/4 px-3 py-2 border border-gray-300 rounded-md" placeholder="Cari berdasarkan nama pemilik atau ID Service" />
                 </div>
                 <div class="overflow-x-auto">
@@ -89,7 +93,8 @@ mysqli_close($link);
                                 <th class="px-4 py-2 border">ID Service</th>
                                 <th class="px-4 py-2 border">Nama Barang</th>
                                 <th class="px-4 py-2 border">Keterangan Akhir</th>
-                                <th class="px-4 py-2 border">Aksi</th>
+                                <th class="px-4 py-2 border">Detail</th>
+                                <th class="px-4 py-2 border">Detail</th>
                             </tr>
                         </thead>
                         <tbody id="riwayatList">
@@ -101,9 +106,10 @@ mysqli_close($link);
                                     <td class="px-4 py-2 border"><?php echo $item['id_service']; ?></td>
                                     <td class="px-4 py-2 border"><?php echo $item['nama_barang']; ?></td>
                                     <td class="px-4 py-2 border"><?php echo $item['keterangan_akhir']; ?></td>
-                                    <td class="px-4 py-2 border">
-                                        <a href="/html/nota.php?id=<?php echo $item['id_service']; ?>&from=riwayat" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Detail</a>
+                                    <td class="px-4 py-2 border text-center">
+                                        <a href="/html/nota.php?id=<?php echo $item['id_service']; ?>&from=riwayat" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">Detail</a>
                                     </td>
+                                    <td class="px-4 py-2 border text-center"><button onclick="deleteRiwayat(<?php echo $item['id_barang_keluar']; ?>)" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Delete</button></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -160,6 +166,153 @@ mysqli_close($link);
                 });
             }
         });
+
+        async function verifyAdminPassword(password) {
+            try {
+                const response = await fetch('/php/verify_admin.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        password: password
+                    })
+                });
+                const data = await response.json();
+                return data.success;
+            } catch (error) {
+                console.error('Error:', error);
+                return false;
+            }
+        }
+
+        async function deleteRiwayat(id) {
+            const {
+                value: password
+            } = await Swal.fire({
+                title: 'Masukkan Password Admin',
+                input: 'password',
+                inputPlaceholder: 'Masukkan password admin',
+                inputAttributes: {
+                    autocapitalize: 'off',
+                    autocorrect: 'off'
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Verifikasi',
+                cancelButtonText: 'Batal',
+                showLoaderOnConfirm: true,
+                preConfirm: async (password) => {
+                    const isVerified = await verifyAdminPassword(password);
+                    if (!isVerified) {
+                        Swal.showValidationMessage('Password admin salah');
+                    }
+                    return isVerified;
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            });
+
+            if (password) {
+                const result = await Swal.fire({
+                    title: 'Apakah Anda yakin?',
+                    text: "Anda tidak akan dapat mengembalikan ini!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal'
+                });
+
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch('/php/delete_riwayat.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                id: id
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            Swal.fire('Terhapus!', 'Riwayat telah dihapus.', 'success');
+                            location.reload();
+                        } else {
+                            Swal.fire('Error!', 'Gagal menghapus riwayat.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        Swal.fire('Error!', 'Terjadi kesalahan saat menghapus riwayat.', 'error');
+                    }
+                }
+            }
+        }
+
+        async function deleteAllRiwayat() {
+            const {
+                value: password
+            } = await Swal.fire({
+                title: 'Masukkan Password Admin',
+                input: 'password',
+                inputPlaceholder: 'Masukkan password admin',
+                inputAttributes: {
+                    autocapitalize: 'off',
+                    autocorrect: 'off'
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Verifikasi',
+                cancelButtonText: 'Batal',
+                showLoaderOnConfirm: true,
+                preConfirm: async (password) => {
+                    const isVerified = await verifyAdminPassword(password);
+                    if (!isVerified) {
+                        Swal.showValidationMessage('Password admin salah');
+                    }
+                    return isVerified;
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            });
+
+            if (password) {
+                const result = await Swal.fire({
+                    title: 'Apakah Anda yakin?',
+                    text: "Anda akan menghapus semua riwayat. Tindakan ini tidak dapat dibatalkan!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, hapus semua!',
+                    cancelButtonText: 'Batal'
+                });
+
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch('/php/delete_all_riwayat.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            Swal.fire('Terhapus!', 'Semua riwayat telah dihapus.', 'success');
+                            location.reload();
+                        } else {
+                            Swal.fire('Error!', 'Gagal menghapus semua riwayat.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        Swal.fire('Error!', 'Terjadi kesalahan saat menghapus semua riwayat.', 'error');
+                    }
+                }
+            }
+        }
+        
     </script>
 </body>
 

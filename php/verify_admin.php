@@ -1,11 +1,10 @@
 <?php
-include "connect_db.php";
-require_once "../config/config.php";
+include "/laragon/www/FPPWEB/php/connect_db.php";
+require_once "../config/config.php"; // Pastikan file ini ada dan mengatur variabel PEPPER
 
 header('Content-Type: application/json');
 
 $data = json_decode(file_get_contents('php://input'), true);
-
 $password = $data['password'];
 
 if (empty($password)) {
