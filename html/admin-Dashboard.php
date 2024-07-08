@@ -2,13 +2,13 @@
 session_start();
 include "/laragon/www/FPPWEB/php/connect_db.php";
 
-// Check if the user is logged in and has the 'admin' role
+// Periksa apakah pengguna sudah login dan memiliki peran 'admin'
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') {
   header("Location: role.php");
   exit();
 }
 
-// Function to get count from a query
+// Fungsi untuk mendapatkan jumlah dari query
 function getCount($link, $query)
 {
   $result = mysqli_query($link, $query);
@@ -20,31 +20,40 @@ function getCount($link, $query)
   return $row['total'] ?? 0;
 }
 
-// Get total revenue
+// Dapatkan total pendapatan
 $queryTotalRevenue = "SELECT SUM(total) AS total FROM rincian_keluhan";
 $totalRevenue = getCount($link, $queryTotalRevenue);
 
-// Get total customers
+// Dapatkan total pelanggan
 $queryTotalCustomers = "SELECT COUNT(DISTINCT id_pelanggan) AS total FROM barang";
 $totalCustomers = getCount($link, $queryTotalCustomers);
 
-// Get total repairs
+// Dapatkan total perbaikan
 $queryTotalRepairs = "SELECT COUNT(*) AS total FROM barang WHERE status = 'Selesai Diperbaiki'";
 $totalRepairs = getCount($link, $queryTotalRepairs);
 
-// Get average repair time
+// Dapatkan rata-rata waktu perbaikan
 $queryAvgRepairTime = "SELECT AVG(TIMESTAMPDIFF(HOUR, tanggal_input, tanggal_selesai)) AS total FROM barang WHERE status = 'Selesai Diperbaiki'";
 $avgRepairTime = getCount($link, $queryAvgRepairTime);
 $avgRepairTime = $avgRepairTime ? round($avgRepairTime, 2) : 0;
 
-// Get barang keluar (items taken out)
-$queryBarangKeluar = "SELECT bk.id_barang_keluar, bk.id_service, p.nama AS customer_name, b.nama_barang, bk.tanggal_keluar
-                      FROM barang_keluar bk
-                      JOIN barang b ON bk.id_service = b.ID_Service
-                      JOIN pelanggan p ON bk.id_pelanggan = p.id_pelanggan
-                      ORDER BY bk.tanggal_keluar DESC
-                      LIMIT 10";
+// Dapatkan data barang keluar dengan total nominal
+$queryBarangKeluar = "SELECT bk.id_service, p.nama AS nama_pemilik, b.nama_barang, 
+COALESCE(SUM(rk.total), 0) AS nominal_total,
+MAX(bk.tanggal_keluar) AS tanggal_keluar
+FROM barang_keluar bk
+JOIN barang b ON bk.id_service = b.ID_Service
+JOIN pelanggan p ON bk.id_pelanggan = p.id_pelanggan
+LEFT JOIN detail_keluhan dk ON dk.ID_Service = b.ID_Service
+LEFT JOIN rincian_keluhan rk ON rk.id_keluhan = dk.id_keluhan
+GROUP BY bk.id_service, p.nama, b.nama_barang
+ORDER BY tanggal_keluar DESC
+LIMIT 10";
+
 $resultBarangKeluar = mysqli_query($link, $queryBarangKeluar);
+if (!$resultBarangKeluar) {
+  die("Error in query: " . mysqli_error($link));
+}
 $barangKeluar = [];
 while ($row = mysqli_fetch_assoc($resultBarangKeluar)) {
   $barangKeluar[] = $row;
@@ -60,7 +69,7 @@ mysqli_close($link);
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Dashboard</title>
+  <title>Dashboard Admin</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -94,13 +103,13 @@ mysqli_close($link);
 
   <!-- Content Area -->
   <div class="ml-64 p-8">
-    <h1 class="text-3xl font-bold mb-8 text-gray-800">Admin Dashboard</h1>
+    <h1 class="text-3xl font-bold mb-8 text-gray-800">Dashboard Admin</h1>
 
     <!-- Key Metrics -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <div class="bg-white p-6 rounded-lg shadow-md text-center">
         <h2 class="text-xl font-semibold mb-2 text-gray-700">Total Pendapatan</h2>
-        <p class="text-3xl font-bold text-green-600">Rp<?php echo number_format($totalRevenue ?? 0, 0, ',', '.'); ?></p>
+        <p class="text-3xl font-bold text-green-600">Rp<?php echo number_format($totalRevenue, 0, ',', '.'); ?></p>
       </div>
       <div class="bg-white p-6 rounded-lg shadow-md text-center">
         <h2 class="text-xl font-semibold mb-2 text-gray-700">Total Pelanggan</h2>
@@ -116,35 +125,32 @@ mysqli_close($link);
       </div>
     </div>
 
-    <!-- Barang Keluar List -->
+    <!-- Daftar Barang Keluar -->
     <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-      <h2 class="text-2xl font-semibold mb-4 text-gray-800">Daftar Barang Keluar</h2>
+      <h2 class="text-2xl font-semibold mb-4 text-gray-800">Daftar 10 Transasksi Terakhir</h2>
       <div class="overflow-x-auto">
         <table class="w-full border-collapse">
           <thead>
             <tr class="bg-gray-200">
-              <th class="px-4 py-2 text-left text-gray-600">No</th>
-              <th class="px-4 py-2 text-left text-gray-600">ID Service</th>
-              <th class="px-4 py-2 text-left text-gray-600">Pelanggan</th>
+              <th class="px-4 py-2 text-left text-gray-600">ID Barang</th>
+              <th class="px-4 py-2 text-left text-gray-600">Nama Pemilik</th>
               <th class="px-4 py-2 text-left text-gray-600">Nama Barang</th>
-              <th class="px-4 py-2 text-left text-gray-600">Nominal</th>
+              <th class="px-4 py-2 text-right text-gray-600">Nominal Total</th>
             </tr>
           </thead>
           <tbody>
             <?php
             if (count($barangKeluar) > 0) {
-              $no = 1;
               foreach ($barangKeluar as $item) {
                 echo "<tr class='border-b hover:bg-gray-50'>";
-                echo "<td class='px-4 py-2'>" . $no++ . "</td>";
-                echo "<td class='px-4 py-2'>" . $item['id_service'] . "</td>";
-                echo "<td class='px-4 py-2'>" . $item['customer_name'] . "</td>";
-                echo "<td class='px-4 py-2'>" . $item['nama_barang'] . "</td>";
-                echo "<td class='px-4 py-2'>" . $item['Nominal'] . "</td>";
+                echo "<td class='px-4 py-2'>" . htmlspecialchars($item['id_service']) . "</td>";
+                echo "<td class='px-4 py-2'>" . htmlspecialchars($item['nama_pemilik']) . "</td>";
+                echo "<td class='px-4 py-2'>" . htmlspecialchars($item['nama_barang']) . "</td>";
+                echo "<td class='px-4 py-2 text-right'>Rp " . number_format($item['nominal_total'], 0, ',', '.') . "</td>";
                 echo "</tr>";
               }
             } else {
-              echo "<tr><td colspan='5' class='text-center px-4 py-2'>Tidak ada data barang keluar.</td></tr>";
+              echo "<tr><td colspan='4' class='text-center px-4 py-2'>Tidak ada data barang keluar.</td></tr>";
             }
             ?>
           </tbody>
@@ -154,7 +160,7 @@ mysqli_close($link);
   </div>
 
   <script>
-    // Logout functionality
+    // Fungsi logout
     document.getElementById('logoutBtn').addEventListener('click', function(e) {
       e.preventDefault();
       Swal.fire({
