@@ -3,10 +3,12 @@ include "/laragon/www/FPPWEB/php/connect_db.php";
 
 // Query untuk mengambil barang yang belum diperbaiki dan sedang diperbaiki
 $query = "SELECT b.ID_Service, b.tanggal_input, p.nama AS nama_pemilik, b.nama_barang, b.status
-          FROM barang b
-          JOIN pelanggan p ON b.id_pelanggan = p.id_pelanggan
-          WHERE b.status IN ('Belum Diperbaiki', 'Sedang Diperbaiki')
-          ORDER BY b.tanggal_input DESC";
+FROM barang b
+JOIN pelanggan p ON b.id_pelanggan = p.id_pelanggan
+JOIN detail_keluhan dk ON b.ID_Service = dk.ID_Service
+WHERE b.status IN ('Belum Diperbaiki', 'Sedang Diperbaiki') 
+AND dk.konfirmasi_keterangan = 'Eksekusi'
+ORDER BY b.tanggal_input ASC;";
 
 $result = mysqli_query($link, $query);
 
@@ -59,7 +61,7 @@ mysqli_close($link);
     <div class="absolute bottom-10 left-0 w-full font-bold lg:block">
       <a href="#" id="logoutBtn" class="block w-2/3 py-3 mx-auto text-sm text-white text-center bg-red-600 hover:bg-red-700 rounded-md z-10">Log Out</a>
     </div>
-    </aside>
+  </aside>
   <!-- Content Area: Transaksi -->
   <div class="ml-64 p-8">
     <div class="container mx-auto py-8">

@@ -87,7 +87,7 @@
         </div>
         <div class="mb-4">
           <label class="block text-gray-700 text-sm font-bold mb-2" for="phone">Nomor HP:</label>
-          <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="phone" name="phone" type="text" placeholder="Masukkan nomor HP pemilik" />
+          <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="phone" name="phone" type="tel" placeholder="Masukkan nomor HP pemilik" pattern="[0-9]+" title="Masukkan hanya angka" required />
         </div>
       </div>
       <!-- Kontainer untuk identitas barang -->
@@ -117,6 +117,7 @@
       </div>
     </form>
   </div>
+  <script src="/js/invoice.js"></script>
 </body>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
@@ -196,71 +197,39 @@
   }
 
   function submitReport() {
-    const form = document.getElementById('reportForm');
-    const name = form.name.value.trim();
-    const address = form.address.value.trim();
-    const phone = form.phone.value.trim();
-    const itemName = form.itemName.value.trim();
-    const brand = form.brand.value.trim();
-    const type = form.type.value.trim();
-    const complaint = form.complaint.value.trim();
+  const form = document.getElementById('reportForm');
+  const phoneInput = document.getElementById('phone');
 
-    if (!name || !address || !phone || !itemName || !brand || !type || !complaint) {
-      Swal.fire({
-        title: "Error!",
-        text: "Mohon lengkapi semua data.",
-        icon: "error",
-      });
-      return;
-    }
-
-    if (!/^\d+$/.test(phone)) {
-      Swal.fire({
-        title: "Error!",
-        text: "Nomor HP harus berupa angka.",
-        icon: "error",
-      });
-      return;
-    }
-
-    const formData = new FormData(form);
-
-    if (selectedCustomerId) {
-      formData.append('id_pelanggan', selectedCustomerId);
-    } else {
-      formData.append('new_customer', 'true');
-    }
-
-    fetch('../php/submit_laporan.php', {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          Swal.fire({
-            title: "Success!",
-            text: data.message,
-            icon: "success",
-          }).then(() => {
-            window.location.href = "kasir-Dashboard.php";
-          });
-        } else {
-          Swal.fire({
-            title: "Error!",
-            text: data.message,
-            icon: "error",
-          });
-        }
-      })
-      .catch(error => {
-        Swal.fire({
-          title: "Error!",
-          text: "Terjadi kesalahan: " + error.message,
-          icon: "error",
-        });
-      });
+  // Validasi nomor telepon
+  if (!/^[0-9]+$/.test(phoneInput.value)) {
+    Swal.fire({
+      title: "Error!",
+      text: "Nomor telepon hanya boleh berisi angka.",
+      icon: "error",
+    });
+    return;
   }
+
+  const formData = new FormData(form);
+
+  if (selectedCustomerId) {
+    formData.append('id_pelanggan', selectedCustomerId);
+  } else {
+    formData.append('new_customer', 'true');
+  }
+
+  const invoiceData = {
+    name: formData.get('name'),
+    address: formData.get('address'),
+    phone: formData.get('phone'),
+    itemName: formData.get('itemName'),
+    brand: formData.get('brand'),
+    type: formData.get('type'),
+    complaint: formData.get('complaint')
+  };
+
+  showInvoice(invoiceData);
+}
 
   function goToDashboard() {
     window.location.href = 'kasir-Dashboard.php';

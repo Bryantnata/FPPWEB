@@ -41,14 +41,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
 
             // Menyimpan data ke dalam tabel barang
-            $stmt = mysqli_prepare($link, "INSERT INTO barang (nama_barang, jenis_barang, merk_barang, keluhan_barang, id_pelanggan, status) VALUES (?, ?, ?, ?, ?, 'Belum Diperbaiki')");
+            $stmt = mysqli_prepare($link, "INSERT INTO barang (nama_barang, jenis_barang, merk_barang, keluhan_barang, id_pelanggan, status, tanggal_input) VALUES (?, ?, ?, ?, ?, 'Belum Diperbaiki', NOW())");
             mysqli_stmt_bind_param($stmt, "ssssi", $itemName, $type, $brand, $complaint, $last_id);
             mysqli_stmt_execute($stmt);
+            $id_service = mysqli_insert_id($link);
+
+            // Mengambil tanggal input
+            $stmt = mysqli_prepare($link, "SELECT tanggal_input FROM barang WHERE ID_Service = ?");
+            mysqli_stmt_bind_param($stmt, "i", $id_service);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            $row = mysqli_fetch_assoc($result);
+            $tanggal_masuk = $row['tanggal_input'];
 
             mysqli_commit($link);
 
             $response["success"] = true;
             $response["message"] = "Laporan berhasil disimpan.";
+            $response["id_service"] = $id_service;
+            $response["tanggal_masuk"] = $tanggal_masuk;
+            $response["name"] = $name;
+            $response["address"] = $address;
+            $response["phone"] = $phone;
+            $response["itemName"] = $itemName;
+            $response["brand"] = $brand;
+            $response["type"] = $type;
+            $response["complaint"] = $complaint;
         } catch (Exception $e) {
             mysqli_rollback($link);
             $response["message"] = "Terjadi kesalahan: " . $e->getMessage();
