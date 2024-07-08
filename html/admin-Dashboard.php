@@ -23,7 +23,6 @@ $totalBarangKeluar = $rowBarangKeluar['total'];
 // Bebaskan memori hasil query
 mysqli_free_result($resultBarangKeluar);
 
-
 // Query untuk mengambil jumlah transaksi hari ini
 $queryTransaksiHariIni = "SELECT COUNT(*) AS total FROM barang WHERE DATE(tanggal_input) = CURDATE()";
 $resultTransaksiHariIni = mysqli_query($link, $queryTransaksiHariIni);
@@ -38,7 +37,6 @@ $totalTransaksiHariIni = $rowTransaksiHariIni['total'];
 
 // Bebaskan memori hasil query
 mysqli_free_result($resultTransaksiHariIni);
-
 
 // Query untuk menghitung barang yang sedang diperbaiki
 $querySedangDiperbaiki = "SELECT COUNT(*) AS total FROM barang WHERE status = 'Sedang Diperbaiki'";
@@ -55,7 +53,6 @@ $totalSedangDiperbaiki = $rowSedangDiperbaiki['total'];
 // Bebaskan memori hasil query
 mysqli_free_result($resultSedangDiperbaiki);
 
-
 // Query untuk menghitung barang yang selesai diperbaiki
 $querySelesaiDiperbaiki = "SELECT COUNT(*) AS total FROM barang WHERE status = 'Selesai Diperbaiki'";
 $resultSelesaiDiperbaiki = mysqli_query($link, $querySelesaiDiperbaiki);
@@ -70,7 +67,6 @@ $totalSelesaiDiperbaiki = $rowSelesaiDiperbaiki['total'];
 
 // Bebaskan memori hasil query
 mysqli_free_result($resultSelesaiDiperbaiki);
-
 
 // Query untuk mengambil data laporan barang dengan status terbaru dan dibatasi 10 row
 $query = "SELECT b.ID_Service AS ID_Service, b.tanggal_input AS Tanggal_Masuk, p.nama AS Nama_Pemilik, b.nama_barang AS Nama_Barang, b.merk_barang AS Merk_Barang, b.jenis_barang AS Tipe_barang, b.status FROM barang b INNER JOIN pelanggan p ON b.id_pelanggan = p.id_pelanggan WHERE b.status IN ('Belum Diperbaiki', 'Sedang Diperbaiki', 'Selesai Diperbaiki') ORDER BY CASE WHEN b.status = 'Selesai Diperbaiki' THEN b.status_updated_at ELSE b.tanggal_input END DESC, b.tanggal_input DESC LIMIT 10";
@@ -142,8 +138,6 @@ mysqli_close($link);
     <div class="absolute bottom-10 left-0 w-full font-bold lg:block">
       <a href="#" id="logoutBtn" class="block w-2/3 py-3 mx-auto text-sm text-white text-center bg-red-600 hover:bg-red-700 rounded-md z-10">Log Out</a>
     </div>
-    <!-- Jam -->
-    <div id="clock" class="absolute bottom-1 left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-bold lg:block text-center text-white"></div>
   </aside>
   <!-- Content Area -->
   <div class="ml-64 p-8">
@@ -271,7 +265,30 @@ mysqli_close($link);
       </div>
     </div>
   </div>
+  <script>
+    // Fungsi untuk logout
+    document.addEventListener("DOMContentLoaded", function() {
+      const logoutButton = document.getElementById("logoutBtn");
+      if (logoutButton) {
+        logoutButton.addEventListener("click", function(event) {
+          event.preventDefault();
+          Swal.fire({
+            title: "Apakah kamu yakin ingin keluar?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Ya, keluar",
+            cancelButtonText: "Batal",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              window.location.href = "/index.html";
+            }
+          });
+        });
+      }
+    });
+  </script>
 </body>
-<script src="../js/script.js"></script>
 
 </html>

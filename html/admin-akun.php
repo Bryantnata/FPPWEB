@@ -1,5 +1,6 @@
 <?php
 include "/laragon/www/FPPWEB/php/connect_db.php";
+require_once "../config/config.php"; // Pastikan file ini ada dan mengatur variabel PEPPER
 
 // Query untuk mengambil data akun kasir dan teknisi
 $query = "SELECT id_user, nama, no_hp, role FROM user WHERE role IN ('kasir', 'teknisi') ORDER BY role, nama";
@@ -50,6 +51,7 @@ mysqli_close($link);
         <!-- Logout Button -->
         <div class="absolute bottom-10 left-0 w-full font-bold lg:block">
             <a href="#" id="logoutBtn" class="block w-2/3 py-3 mx-auto text-sm text-white text-center bg-red-600 hover:bg-red-700 rounded-md z-10">Log Out</a>
+        </div>
     </aside>
     <!-- Content Area -->
     <div class="ml-64 p-8">
@@ -59,7 +61,7 @@ mysqli_close($link);
                 <button onclick="showAddAccountModal()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">
                     Tambah Akun
                 </button>
-                <button onclick="showSuperUserModal()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                <button onclick="showSuperUserModal()" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
                     Superuser
                 </button>
             </div>
@@ -96,8 +98,11 @@ mysqli_close($link);
                                 <?php echo ucfirst(htmlspecialchars($account['role'])); ?>
                             </td>
                             <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                <button onclick="showResetPasswordModal(<?php echo $account['id_user']; ?>)" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
+                                <button onclick="showResetPasswordModal(<?php echo $account['id_user']; ?>)" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded mr-2">
                                     Reset Password
+                                </button>
+                                <button onclick="deleteAccount(<?php echo $account['id_user']; ?>, '<?php echo $account['role']; ?>')" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
+                                    Hapus
                                 </button>
                             </td>
                         </tr>
@@ -108,10 +113,34 @@ mysqli_close($link);
     </div>
 
     <script>
-        function showAddAccountModal() {
-            Swal.fire({
+        // Fungsi untuk logout
+        const logoutButton = document.getElementById("logoutBtn");
+        if (logoutButton) {
+            logoutButton.addEventListener("click", function(event) {
+                event.preventDefault();
+                Swal.fire({
+                    title: "Apakah kamu yakin ingin keluar?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Ya, keluar",
+                    cancelButtonText: "Batal",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = "/index.html";
+                    }
+                });
+            });
+        }
+
+        async function showAddAccountModal() {
+            const {
+                value: formValues
+            } = await Swal.fire({
                 title: 'Tambah Akun Baru',
-                html: '<input id="nama" class="swal2-input" placeholder="Nama">' +
+                html: '<input id="name" class="swal2-input" placeholder="Nama">' +
+                    '<input id="username" class="swal2-input" placeholder="Username">' +
                     '<input id="no_hp" class="swal2-input" placeholder="Nomor Telepon">' +
                     '<select id="role" class="swal2-select">' +
                     '<option value="kasir">Kasir</option>' +
@@ -123,20 +152,39 @@ mysqli_close($link);
                 confirmButtonText: 'Tambah',
                 cancelButtonText: 'Batal',
                 preConfirm: () => {
-                    // Here you would normally send this data to the server
                     return {
-                        nama: document.getElementById('nama').value,
+                        name: document.getElementById('name').value,
+                        username: document.getElementById('username').value,
                         no_hp: document.getElementById('no_hp').value,
                         role: document.getElementById('role').value,
                         password: document.getElementById('password').value
                     }
                 }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Here you would handle the server response
-                    Swal.fire('Sukses', 'Akun baru berhasil ditambahkan', 'success');
-                }
             });
+
+            if (formValues) {
+                try {
+                    const response = await fetch('/php/add_account.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formValues)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        Swal.fire('Sukses', 'Akun baru berhasil ditambahkan', 'success');
+                        // Reload the page or update the table
+                        location.reload();
+                    } else {
+                        Swal.fire('Error', result.message, 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Error', 'Terjadi kesalahan saat menambahkan akun', 'error');
+                }
+            }
         }
 
         function showSuperUserModal() {
@@ -155,51 +203,41 @@ mysqli_close($link);
             });
         }
 
-        function showSuperUserTable() {
-            // Here you would fetch the admin data from the server
-            // For this example, we'll use dummy data
-            const adminData = [{
-                    id: 1,
-                    nama: 'Admin 1'
-                },
-                {
-                    id: 2,
-                    nama: 'Admin 2'
+        async function showSuperUserTable() {
+            try {
+                const response = await fetch('/php/get_admin_list.php');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
                 }
-            ];
+                const adminData = await response.json();
 
-            let tableHtml = '<table class="min-w-full leading-normal">';
-            tableHtml += '<thead><tr><th>Nama</th><th>Aksi</th></tr></thead><tbody>';
-            adminData.forEach(admin => {
-                tableHtml += `<tr>
-                <td>${admin.nama}</td>
-                <td><button onclick="resetAdminPassword(${admin.id})" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">Reset Password</button></td>
+                let tableHtml = '<table class="min-w-full leading-normal">';
+                tableHtml += '<thead><tr><th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nama</th><th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Aksi</th></tr></thead><tbody>';
+                adminData.forEach(admin => {
+                    tableHtml += `<tr>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${admin.nama}</td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <button onclick="resetAdminPassword(${admin.id_user})" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded mr-2">Reset Password</button>
+                    <button onclick="deleteAccount(${admin.id_user}, 'admin')" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">Hapus</button>
+                </td>
             </tr>`;
-            });
-            tableHtml += '</tbody></table>';
+                });
+                tableHtml += '</tbody></table>';
 
-            Swal.fire({
-                title: 'Daftar Admin',
-                html: tableHtml,
-                showCloseButton: true,
-                showConfirmButton: false,
-                footer: '<button onclick="addAdminAccount()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Tambah Admin</button>'
-            });
-        }
-
-        function resetAdminPassword(adminId) {
-            Swal.fire({
-                title: 'Verifikasi Admin',
-                input: 'password',
-                inputPlaceholder: 'Masukkan password admin',
-                showCancelButton: true,
-                confirmButtonText: 'Reset Password',
-                cancelButtonText: 'Batal',
-                preConfirm: (password) => {
-                    // Here you would verify the admin password and reset the password
-                    Swal.fire('Sukses', 'Password admin berhasil direset', 'success');
-                }
-            });
+                Swal.fire({
+                    title: 'Daftar Admin',
+                    html: tableHtml,
+                    showCloseButton: true,
+                    showConfirmButton: false,
+                    footer: '<button onclick="addAdminAccount()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Tambah Admin</button>',
+                    customClass: {
+                        container: 'swal-wide',
+                    }
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Gagal mengambil data admin', 'error');
+            }
         }
 
         function addAdminAccount() {
@@ -217,10 +255,13 @@ mysqli_close($link);
             });
         }
 
-        function showAddAdminForm() {
-            Swal.fire({
+        async function showAddAdminForm() {
+            const {
+                value: formValues
+            } = await Swal.fire({
                 title: 'Tambah Akun Admin Baru',
                 html: '<input id="nama" class="swal2-input" placeholder="Nama">' +
+                    '<input id="username" class="swal2-input" placeholder="Username">' +
                     '<input id="no_hp" class="swal2-input" placeholder="Nomor Telepon">' +
                     '<input id="password" type="password" class="swal2-input" placeholder="Password">',
                 focusConfirm: false,
@@ -228,49 +269,264 @@ mysqli_close($link);
                 confirmButtonText: 'Tambah',
                 cancelButtonText: 'Batal',
                 preConfirm: () => {
-                    // Here you would normally send this data to the server
                     return {
                         nama: document.getElementById('nama').value,
+                        username: document.getElementById('username').value,
                         no_hp: document.getElementById('no_hp').value,
-                        password: document.getElementById('password').value
+                        password: document.getElementById('password').value,
+                        role: 'admin'
                     }
                 }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Here you would handle the server response
-                    Swal.fire('Sukses', 'Akun admin baru berhasil ditambahkan', 'success');
-                }
             });
+
+            if (formValues) {
+                try {
+                    const response = await fetch('/php/add_account.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formValues)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        Swal.fire('Sukses', 'Akun admin baru berhasil ditambahkan', 'success');
+                        showSuperUserTable(); // Refresh the superuser table
+                    } else {
+                        Swal.fire('Error', result.message, 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Error', 'Terjadi kesalahan saat menambahkan akun admin', 'error');
+                }
+            }
         }
 
-        function showResetPasswordModal(userId) {
-            Swal.fire({
+        async function showResetPasswordModal(userId) {
+            const {
+                value: adminPassword
+            } = await Swal.fire({
                 title: 'Verifikasi Admin',
                 input: 'password',
                 inputPlaceholder: 'Masukkan password admin',
                 showCancelButton: true,
                 confirmButtonText: 'Verifikasi',
-                cancelButtonText: 'Batal',
-                preConfirm: (password) => {
-                    // Here you would verify the admin password
-                    showNewPasswordForm(userId);
-                }
+                cancelButtonText: 'Batal'
             });
+
+            if (adminPassword) {
+                try {
+                    const verifyResponse = await fetch('/php/verify_admin.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            password: adminPassword
+                        })
+                    });
+
+                    const verifyResult = await verifyResponse.json();
+
+                    if (verifyResult.success) {
+                        showNewPasswordForm(userId);
+                    } else {
+                        Swal.fire('Error', 'Verifikasi gagal', 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Error', 'Terjadi kesalahan saat verifikasi', 'error');
+                }
+            }
         }
 
-        function showNewPasswordForm(userId) {
-            Swal.fire({
+        async function resetAdminPassword(userId) {
+            const {
+                value: adminPassword
+            } = await Swal.fire({
+                title: 'Verifikasi Admin',
+                input: 'password',
+                inputPlaceholder: 'Masukkan password admin Anda',
+                showCancelButton: true,
+                confirmButtonText: 'Verifikasi',
+                cancelButtonText: 'Batal'
+            });
+
+            if (adminPassword) {
+                try {
+                    const verifyResponse = await fetch('/php/verify_admin.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            password: adminPassword
+                        })
+                    });
+
+                    const verifyResult = await verifyResponse.json();
+
+                    if (verifyResult.success) {
+                        const {
+                            value: newPassword
+                        } = await Swal.fire({
+                            title: 'Reset Password Admin',
+                            input: 'password',
+                            inputPlaceholder: 'Masukkan password baru',
+                            showCancelButton: true,
+                            confirmButtonText: 'Reset',
+                            cancelButtonText: 'Batal'
+                        });
+
+                        if (newPassword) {
+                            const resetResponse = await fetch('/php/reset_password.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    userId,
+                                    newPassword
+                                })
+                            });
+
+                            const resetResult = await resetResponse.json();
+
+                            if (resetResult.success) {
+                                Swal.fire('Sukses', 'Password admin berhasil direset', 'success');
+                            } else {
+                                Swal.fire('Error', resetResult.message, 'error');
+                            }
+                        }
+                    } else {
+                        Swal.fire('Error', 'Verifikasi gagal', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'Terjadi kesalahan saat mereset password', 'error');
+                }
+            }
+        }
+
+        async function showNewPasswordForm(userId) {
+            const {
+                value: newPassword
+            } = await Swal.fire({
                 title: 'Reset Password',
                 input: 'password',
                 inputPlaceholder: 'Masukkan password baru',
                 showCancelButton: true,
                 confirmButtonText: 'Reset',
-                cancelButtonText: 'Batal',
-                preConfirm: (newPassword) => {
-                    // Here you would send the new password to the server
-                    Swal.fire('Sukses', 'Password berhasil direset', 'success');
-                }
+                cancelButtonText: 'Batal'
             });
+
+            if (newPassword) {
+                try {
+                    const response = await fetch('/php/reset_password.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            userId,
+                            newPassword
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        Swal.fire('Sukses', 'Password berhasil direset', 'success');
+                    } else {
+                        Swal.fire('Error', result.message, 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Error', 'Terjadi kesalahan saat mereset password', 'error');
+                }
+            }
+        }
+
+        async function deleteAccount(userId, role) {
+            const result = await Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: `Anda akan menghapus akun ${role} ini. Tindakan ini tidak dapat dibatalkan!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            });
+
+            if (result.isConfirmed) {
+                const {
+                    value: adminPassword
+                } = await Swal.fire({
+                    title: 'Verifikasi Admin',
+                    input: 'password',
+                    inputPlaceholder: 'Masukkan password admin',
+                    inputAttributes: {
+                        autocapitalize: 'off',
+                        autocorrect: 'off'
+                    },
+                    showCancelButton: true,
+                    confirmButtonText: 'Verifikasi',
+                    cancelButtonText: 'Batal',
+                    showLoaderOnConfirm: true,
+                    preConfirm: async (password) => {
+                        try {
+                            const response = await fetch('/php/verify_admin.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    password
+                                })
+                            });
+                            const data = await response.json();
+                            if (!data.success) {
+                                throw new Error(data.message || 'Verifikasi gagal');
+                            }
+                            return true;
+                        } catch (error) {
+                            Swal.showValidationMessage(`Verifikasi gagal: ${error}`);
+                        }
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                });
+
+                if (adminPassword) {
+                    try {
+                        const response = await fetch('/php/delete_account.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                userId,
+                                role
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            Swal.fire('Terhapus!', 'Akun telah berhasil dihapus.', 'success');
+                            if (role === 'admin') {
+                                showSuperUserTable(); // Refresh the superuser table
+                            } else {
+                                location.reload(); // Reload the page for non-admin accounts
+                            }
+                        } else {
+                            Swal.fire('Error', result.message, 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        Swal.fire('Error', 'Terjadi kesalahan saat menghapus akun', 'error');
+                    }
+                }
+            }
         }
     </script>
 

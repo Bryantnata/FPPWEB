@@ -1,24 +1,27 @@
 <?php
 include "connect_db.php";
-require_once "../config/config.php"; // Pastikan file ini mengatur variabel $link dan PEPPER
+require_once "../config/config.php";
 
-// Dapatkan data dari form
-$name = $_POST['name'];
-$username = $_POST['username'];
-$no_hp = $_POST['no_hp'];
-$role = $_POST['role'];
-$password = $_POST['password'];
+header('Content-Type: application/json');
+
+$data = json_decode(file_get_contents('php://input'), true);
+
+$name = $data['nama'];
+$username = $data['username'];
+$no_hp = $data['no_hp'];
+$role = $data['role'];
+$password = $data['password'];
 
 // Validasi input
 if (empty($name) || empty($username) || empty($no_hp) || empty($role) || empty($password)) {
-    header("Location: /html/admin-akun.php?error=empty_fields");
+    echo json_encode(['success' => false, 'message' => 'Semua field harus diisi']);
     exit();
 }
 
 // Validasi role
-$valid_roles = ['admin', 'kasir', 'teknisi'];
+$valid_roles = ['kasir', 'teknisi', 'admin'];
 if (!in_array($role, $valid_roles)) {
-    header("Location: /html/form_tambah.php");
+    echo json_encode(['success' => false, 'message' => 'Role tidak valid']);
     exit();
 }
 
@@ -35,16 +38,13 @@ if ($stmt = mysqli_prepare($link, $query)) {
     if (mysqli_stmt_execute($stmt)) {
         mysqli_stmt_close($stmt);
         mysqli_close($link);
-        header("Location: /html/admin-dashboard.php?success=user_added");
-        exit();
+        echo json_encode(['success' => true, 'message' => 'Akun berhasil ditambahkan']);
     } else {
         mysqli_stmt_close($stmt);
         mysqli_close($link);
-        header("Location: /html/form_tambah.php?error=" . urlencode(mysqli_error($link)));
-        exit();
+        echo json_encode(['success' => false, 'message' => 'Gagal menambahkan akun: ' . mysqli_error($link)]);
     }
 } else {
     mysqli_close($link);
-    header("Location: /html/form_tambah.php?error=" . urlencode(mysqli_error($link)));
-    exit();
+    echo json_encode(['success' => false, 'message' => 'Gagal mempersiapkan query: ' . mysqli_error($link)]);
 }
