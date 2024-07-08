@@ -135,35 +135,37 @@ mysqli_close($link);
         }
 
         async function showAddAccountModal() {
-            const {
-                value: formValues
-            } = await Swal.fire({
-                title: 'Tambah Akun Baru',
-                html: '<input id="name" class="swal2-input" placeholder="Nama">' +
-                    '<input id="username" class="swal2-input" placeholder="Username">' +
-                    '<input id="no_hp" class="swal2-input" placeholder="Nomor Telepon">' +
-                    '<select id="role" class="swal2-select">' +
-                    '<option value="kasir">Kasir</option>' +
-                    '<option value="teknisi">Teknisi</option>' +
-                    '</select>' +
-                    '<input id="password" type="password" class="swal2-input" placeholder="Password">',
-                focusConfirm: false,
-                showCancelButton: true,
-                confirmButtonText: 'Tambah',
-                cancelButtonText: 'Batal',
-                preConfirm: () => {
-                    return {
-                        name: document.getElementById('name').value,
-                        username: document.getElementById('username').value,
-                        no_hp: document.getElementById('no_hp').value,
-                        role: document.getElementById('role').value,
-                        password: document.getElementById('password').value
+            try {
+                const {
+                    value: formValues
+                } = await Swal.fire({
+                    title: 'Tambah Akun Baru',
+                    html: `
+                <input id="name" class="swal2-input" placeholder="Nama">
+                <input id="username" class="swal2-input" placeholder="Username">
+                <input id="no_hp" class="swal2-input" placeholder="Nomor Telepon">
+                <select id="role" class="swal2-select">
+                    <option value="kasir">Kasir</option>
+                    <option value="teknisi">Teknisi</option>
+                </select>
+                <input id="password" type="password" class="swal2-input" placeholder="Password">
+            `,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonText: 'Tambah',
+                    cancelButtonText: 'Batal',
+                    preConfirm: () => {
+                        return {
+                            name: document.getElementById('name').value,
+                            username: document.getElementById('username').value,
+                            no_hp: document.getElementById('no_hp').value,
+                            role: document.getElementById('role').value,
+                            password: document.getElementById('password').value
+                        };
                     }
-                }
-            });
+                });
 
-            if (formValues) {
-                try {
+                if (formValues) {
                     const response = await fetch('/php/add_account.php', {
                         method: 'POST',
                         headers: {
@@ -172,18 +174,23 @@ mysqli_close($link);
                         body: JSON.stringify(formValues)
                     });
 
+                    const contentType = response.headers.get("content-type");
+                    if (!contentType || !contentType.includes("application/json")) {
+                        throw new Error("Oops, we haven't got JSON!");
+                    }
+
                     const result = await response.json();
 
                     if (result.success) {
-                        Swal.fire('Sukses', 'Akun baru berhasil ditambahkan', 'success');
-                        // Reload the page or update the table
+                        await Swal.fire('Sukses', 'Akun baru berhasil ditambahkan', 'success');
                         location.reload();
                     } else {
-                        Swal.fire('Error', result.message, 'error');
+                        throw new Error(result.message || 'Terjadi kesalahan saat menambahkan akun');
                     }
-                } catch (error) {
-                    Swal.fire('Error', 'Terjadi kesalahan saat menambahkan akun', 'error');
                 }
+            } catch (error) {
+                console.error('Error:', error);
+                await Swal.fire('Error', error.message || 'Terjadi kesalahan saat menambahkan akun', 'error');
             }
         }
 

@@ -27,10 +27,9 @@ if (mysqli_num_rows($result) > 0) {
 
     // Verifikasi password menggunakan password_verify
     if (password_verify($password_peppered, $hashed_password)) {
-        // Check if the role is valid
-        $valid_roles = ['admin', 'kasir', 'teknisi'];
-        if (!in_array($user_role, $valid_roles)) {
-            redirectWithErrorMessage('invalid_role');
+        // Check if the role from the form matches the role in the database
+        if ($role !== $user_role) {
+            redirectWithErrorMessage('invalid_role_selection');
         }
 
         // Password cocok, mulai session
@@ -107,6 +106,9 @@ function redirectWithMessage($role)
 function redirectWithErrorMessage($errorType)
 {
     switch ($errorType) {
+        case 'invalid_role_selection':
+            $errorMessage = 'Role yang dipilih tidak sesuai. Silakan coba lagi.';
+            break;
         case 'invalid_role':
             $errorMessage = 'Role tidak valid. Silakan hubungi administrator.';
             break;

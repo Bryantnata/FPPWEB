@@ -8,7 +8,8 @@ JOIN pelanggan p ON b.id_pelanggan = p.id_pelanggan
 JOIN detail_keluhan dk ON b.ID_Service = dk.ID_Service
 WHERE b.status IN ('Belum Diperbaiki', 'Sedang Diperbaiki') 
 AND dk.konfirmasi_keterangan = 'Eksekusi'
-ORDER BY b.tanggal_input ASC;";
+ORDER BY b.tanggal_input ASC;";
+
 
 $result = mysqli_query($link, $query);
 
@@ -83,16 +84,22 @@ mysqli_close($link);
               </tr>
             </thead>
             <tbody id="transaksiList">
-              <?php foreach ($transaksi as $index => $item) : ?>
+              <?php if (!empty($transaksi)) : ?>
+                <?php foreach ($transaksi as $index => $item) : ?>
+                  <tr>
+                    <td class="px-4 py-2 border"><?php echo $index + 1; ?></td>
+                    <td class="px-4 py-2 border"><?php echo date('d-m-Y', strtotime($item['tanggal_input'])); ?></td>
+                    <td class="px-4 py-2 border"><?php echo $item['ID_Service']; ?></td>
+                    <td class="px-4 py-2 border"><?php echo $item['nama_pemilik']; ?></td>
+                    <td class="px-4 py-2 border"><?php echo $item['nama_barang']; ?></td>
+                    <td class="px-4 py-2 border"><?php echo $item['status']; ?></td>
+                  </tr>
+                <?php endforeach; ?>
+              <?php else : ?>
                 <tr>
-                  <td class="px-4 py-2 border"><?php echo $index + 1; ?></td>
-                  <td class="px-4 py-2 border"><?php echo date('d-m-Y', strtotime($item['tanggal_input'])); ?></td>
-                  <td class="px-4 py-2 border"><?php echo $item['ID_Service']; ?></td>
-                  <td class="px-4 py-2 border"><?php echo $item['nama_pemilik']; ?></td>
-                  <td class="px-4 py-2 border"><?php echo $item['nama_barang']; ?></td>
-                  <td class="px-4 py-2 border"><?php echo $item['status']; ?></td>
+                  <td class="px-4 py-2 border text-center" colspan="6">Tidak ada transaksi.</td>
                 </tr>
-              <?php endforeach; ?>
+              <?php endif; ?>
             </tbody>
           </table>
         </div>
