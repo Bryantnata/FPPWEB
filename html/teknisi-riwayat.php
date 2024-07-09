@@ -74,7 +74,7 @@ mysqli_close($link);
             <h1 class="text-3xl font-bold mb-8 text-center">Daftar Riwayat</h1>
             <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
                 <div class="mb-4 flex justify-end">
-                    <input id="searchInput" type="text" class="w-1/4 px-3 py-2 border border-gray-300 rounded-md" placeholder="Cari berdasarkan nama pemilik atau ID Service" />
+                    <input id="searchInput" type="text" class="w-1/4 px-3 py-2 border border-gray-300 rounded-md" placeholder="Cari berdasarkan ID Service" />
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse border border-gray-400">
@@ -86,7 +86,7 @@ mysqli_close($link);
                                 <th class="px-4 py-2 border">ID Service</th>
                                 <th class="px-4 py-2 border">Nama Barang</th>
                                 <th class="px-4 py-2 border">Keterangan Akhir</th>
-                                <th class="px-4 py-2 border">Aksi</th>
+                                <th class="px-4 py-2 border">Detail</th>
                             </tr>
                         </thead>
                         <tbody id="riwayatList">
@@ -98,7 +98,7 @@ mysqli_close($link);
                                     <td class="px-4 py-2 border"><?php echo $item['id_service']; ?></td>
                                     <td class="px-4 py-2 border"><?php echo $item['nama_barang']; ?></td>
                                     <td class="px-4 py-2 border"><?php echo $item['keterangan_akhir']; ?></td>
-                                    <td class="px-4 py-2 border">
+                                    <td class="px-4 py-2 border text-center">
                                         <a href="/html/nota.php?id=<?php echo $item['id_service']; ?>&from=riwayat" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Detail</a>
                                     </td>
                                 </tr>
@@ -126,9 +126,8 @@ mysqli_close($link);
                 const searchTerm = searchInput.value.toLowerCase();
 
                 for (let i = 0; i < rows.length; i++) {
-                    const namaPemilik = rows[i].getElementsByTagName('td')[4].textContent.toLowerCase();
                     const idService = rows[i].getElementsByTagName('td')[3].textContent.toLowerCase();
-                    if (namaPemilik.includes(searchTerm) || idService.includes(searchTerm)) {
+                    if (idService.includes(searchTerm)) {
                         rows[i].style.display = '';
                     } else {
                         rows[i].style.display = 'none';

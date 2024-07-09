@@ -496,7 +496,6 @@ mysqli_close($link);
     </div>
   </div>
 </body>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     // Fungsi untuk logout
@@ -522,44 +521,90 @@ mysqli_close($link);
         });
       });
     }
-    document.querySelectorAll('.confirm-analisis').forEach(button => {
+    const analisisButtons = document.querySelectorAll('.confirm-analisis');
+    analisisButtons.forEach(button => {
       button.addEventListener('click', function() {
         const serviceId = this.getAttribute('data-id');
         const keluhan = this.getAttribute('data-keluhan');
 
-        // Kirim permintaan langsung ke server
-        fetch('../php/analisis.php', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              serviceId: serviceId,
-              keluhan: keluhan,
-              keteranganAwal: "Analisis otomatis", // Atau bisa dikosongkan jika tidak diperlukan
-              kondisi: "bisa diperbaiki" // Atau nilai default lainnya
-            })
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              Swal.fire('Sukses', 'Analisis berhasil dikirim', 'success').then(() => {
-                // Hapus baris dari tabel
-                this.closest('tr').remove();
-                updateRowNumbers();
-                updateTotalPeriksa();
-                refreshDibatalkanTable();
-              });
-            } else {
-              Swal.fire('Error', 'Gagal mengirim analisis', 'error');
+        Swal.fire({
+          title: 'Analisis Barang',
+          html: '<div class="swal2-content" style="padding: 0 1rem;">' +
+            '<div class="mb-2">' +
+            '<label for="keluhan-barang" class="block text-sm font-medium text-gray-700">Keluhan Barang:</label>' +
+            `<textarea id="keluhan-barang" class="swal2-textarea" rows="2" style="font-size: 0.875rem; padding: 0.5rem;" readonly>${keluhan}</textarea>` +
+            '</div>' +
+            '<div class="mb-2">' +
+            '<label for="keterangan-awal" class="block text-sm font-medium text-gray-700">Keterangan Awal:</label>' +
+            '<textarea id="keterangan-awal" class="swal2-textarea" rows="2" style="font-size: 0.875rem; padding: 0.5rem;"></textarea>' +
+            '</div>' +
+            '<div class="mb-2">' +
+            '<label for="kondisi" class="block text-sm font-medium text-gray-700">Kondisi:</label>' +
+            '<select id="kondisi" class="swal2-select" style="font-size: 0.875rem; padding: 0.5rem;">' +
+            '<option value="bisa diperbaiki">Bisa diperbaiki</option>' +
+            '<option value="tidak bisa diperbaiki">Tidak bisa diperbaiki</option>' +
+            '</select>' +
+            '</div>' +
+            '</div>',
+          showCancelButton: true,
+          confirmButtonText: 'Kirim',
+          cancelButtonText: 'Batal',
+          preConfirm: () => {
+            const keteranganAwal = Swal.getPopup().querySelector('#keterangan-awal').value;
+            const kondisi = Swal.getPopup().querySelector('#kondisi').value;
+
+            if (!keteranganAwal) {
+              Swal.showValidationMessage('Keterangan awal harus diisi');
+              return false;
             }
-          })
-          .catch(error => {
-            console.error('Error:', error);
-            Swal.fire('Error', 'Terjadi kesalahan saat mengirim analisis', 'error');
-          });
+
+            return fetch('../php/analisis.php', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                serviceId: serviceId,
+                keluhan: keluhan,
+                keteranganAwal: keteranganAwal,
+                kondisi: kondisi
+              })
+            }).then(response => {
+              if (!response.ok) {
+                throw new Error('Gagal mengirim data');
+              }
+              return response.json();
+            }).catch(error => {
+              Swal.showValidationMessage(`Request failed: ${error.message}`);
+            });
+          }
+        }).then((result) => {
+          if (result.isConfirmed && result.value.success) {
+            Swal.fire('Sukses', 'Analisis berhasil dikirim', 'success').then(() => {
+              // Hapus baris dari tabel
+              const row = this.closest('tr');
+              if (row) {
+                row.remove();
+              }
+              // Periksa apakah tabel sudah kosong
+              const tbody = document.querySelector('#barangPeriksa');
+              if (tbody.children.length === 0) {
+                // Jika tabel kosong, tambahkan baris "Tidak ada data"
+                const noDataRow = document.createElement('tr');
+                noDataRow.innerHTML = '<td colspan="8" class="px-4 py-2 text-center">Tidak ada laporan.</td>';
+                tbody.appendChild(noDataRow);
+              }
+              // Update nomor urut dan total periksa
+              updateRowNumbers();
+              updateTotalPeriksa();
+            });
+          } else if (result.isConfirmed) {
+            Swal.fire('Error', 'Gagal mengirim analisis', 'error');
+          }
+        });
       });
     });
+
 
     function updateStatusPengerjaan(id) {
       fetch('/php/update_status_pengerjaan.php', {
@@ -650,43 +695,6 @@ mysqli_close($link);
             'Barang telah dikembalikan.',
             'success'
           ).then(() => {
-            refreshDibatalkanTable();
-          });
-        } else {
-          Swal.fire(
-            'Gagal!',
-            'Terjadi kesalahan saat mengembalikan barang.',
-            'error'
-          );
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        Swal.fire(
-          'Error!',
-          'Terjadi kesalahan pada server.',
-          'error'
-        );
-      });
-  }
-
-
-  function kembalikanBarang(id) {
-    fetch('/php/kembalikan_barang.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'id=' + id
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          Swal.fire(
-            'Berhasil!',
-            'Barang telah dikembalikan.',
-            'success'
-          ).then(() => {
             // Hapus baris dari tabel
             const row = document.querySelector(`#barangListDibatalkan tr[data-id="${id}"]`);
             if (row) {
@@ -704,7 +712,6 @@ mysqli_close($link);
 
             // Opsional: Update nomor urut
             updateRowNumbers();
-            refreshDibatalkanTable(); // Tambahkan ini
           });
         } else {
           Swal.fire(
@@ -742,53 +749,6 @@ mysqli_close($link);
       if (totalElement) {
         totalElement.textContent = total;
       }
-    }
-
-    function refreshDibatalkanTable() {
-      fetch('get_barang_dibatalkan.php')
-        .then(response => response.json())
-        .then(data => {
-          const tbody = document.querySelector('#barangListDibatalkan');
-          tbody.innerHTML = '';
-          if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="px-4 py-2 border text-center">Tidak ada laporan.</td></tr>';
-          } else {
-            data.forEach((row, index) => {
-              const tr = document.createElement('tr');
-              tr.innerHTML = `
-                        <td class="px-4 py-2 border">${index + 1}</td>
-                        <td class="px-4 py-2 border">${row.ID_Service}</td>
-                        <td class="px-4 py-2 border">${row.tanggal_input}</td>
-                        <td class="px-4 py-2 border">${row.nama_barang}</td>
-                        <td class="px-4 py-2 border">${row.merk_barang}</td>
-                        <td class="px-4 py-2 border">${row.jenis_barang}</td>
-                        <td class="px-4 py-2 border">${row.keluhan_barang}</td>
-                        <td class="px-4 py-2 border">${row.konfirmasi_keterangan}</td>
-                        <td class="px-4 py-2 border text-center">
-                            <button class="confirm-dikembalikan bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded" data-id="${row.ID_Service}">
-                                Dikembalikan
-                            </button>
-                        </td>
-                    `;
-              tbody.appendChild(tr);
-            });
-          }
-          // Reattach event listeners for new buttons
-          attachDikembalikanListeners();
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          Swal.fire('Error', 'Gagal memuat data barang dibatalkan', 'error');
-        });
-    }
-
-    function attachDikembalikanListeners() {
-      document.querySelectorAll('.confirm-dikembalikan').forEach(button => {
-        button.addEventListener('click', function() {
-          const id = this.getAttribute('data-id');
-          konfirmasiDikembalikan(id);
-        });
-      });
     }
   }
 </script>

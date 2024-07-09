@@ -313,7 +313,7 @@ mysqli_close($link);
                   default => '',
                 };
 
-                echo "<tr class='hover:bg-gray-50' data-id='" . $row["ID_Service"] . "'>";
+                echo "<tr class='hover:bg-gray-50 text-center' data-id='" . $row["ID_Service"] . "'>";
                 echo "<td class='px-4 py-2 border border text-center'>" . $no . "</td>";
                 echo "<td class='px-4 py-2 border border text-center'>" . $row["ID_Service"] . "</td>";
                 echo "<td class='px-4 py-2 border border'>" . $row["Nama_Pemilik"] . "</td>";
@@ -394,7 +394,7 @@ mysqli_close($link);
               foreach ($paginatedListPengambilan as $row) {
                 $hubungiAmbilClass = $row["hubungi_ambil"] == 'Sudah' ? 'bg-white' : 'bg-pink-200';
 
-                echo "<tr class='hover:bg-gray-50' data-id='" . $row["ID_Service"] . "'>";
+                echo "<tr class='hover:bg-gray-50 text-center' data-id='" . $row["ID_Service"] . "'>";
                 echo "<td class='px-4 py-2 border  text-center'>" . $no . "</td>";
                 echo "<td class='px-4 py-2 border  text-center'>" . $row["ID_Service"] . "</td>";
                 echo "<td class='px-4 py-2 border '>" . $row["Nama_Pemilik"] . "</td>";

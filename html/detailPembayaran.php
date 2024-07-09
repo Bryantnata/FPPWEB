@@ -123,6 +123,11 @@ if ($result_barang->num_rows > 0) {
                                 <td class="font-semibold">:</td>
                                 <td><?php echo $row_barang["keluhan_barang"]; ?></td>
                             </tr>
+                            <tr>
+                                <td class="font-semibold pr-4">Keterangan</td>
+                                <td class="font-semibold">:</td>
+                                <td><?php echo $row_barang["keterangan_akhir"]; ?></td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>

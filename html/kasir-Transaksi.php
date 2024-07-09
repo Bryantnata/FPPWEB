@@ -87,17 +87,23 @@ mysqli_close($link);
               <?php if (!empty($transaksi)) : ?>
                 <?php foreach ($transaksi as $index => $item) : ?>
                   <tr>
-                    <td class="px-4 py-2 border"><?php echo $index + 1; ?></td>
-                    <td class="px-4 py-2 border"><?php echo date('d-m-Y', strtotime($item['tanggal_input'])); ?></td>
-                    <td class="px-4 py-2 border"><?php echo $item['ID_Service']; ?></td>
+                    <td class="px-4 py-2 border text-center"><?php echo $index + 1; ?></td>
+                    <td class="px-4 py-2 border text-center"><?php echo date('d-m-Y', strtotime($item['tanggal_input'])); ?></td>
+                    <td class="px-4 py-2 border text-center"><?php echo $item['ID_Service']; ?></td>
                     <td class="px-4 py-2 border"><?php echo $item['nama_pemilik']; ?></td>
                     <td class="px-4 py-2 border"><?php echo $item['nama_barang']; ?></td>
-                    <td class="px-4 py-2 border"><?php echo $item['status']; ?></td>
+                    <td class="px-4 py-2 border"><?php echo $item['jenis_barang']; ?></td>
+                    <td class="px-4 py-2 border">Rp <?php echo number_format($item['total_harga'], 0, ',', '.'); ?></td>
+                    <td class="px-4 py-2 border text-center">
+                      <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded edit-btn" data-id="<?php echo $item['ID_Service']; ?>">
+                        Edit
+                      </button>
+                    </td>
                   </tr>
                 <?php endforeach; ?>
               <?php else : ?>
                 <tr>
-                  <td class="px-4 py-2 border text-center" colspan="6">Tidak ada transaksi.</td>
+                  <td class="px-4 py-2 border text-center" colspan="9">Tidak ada transaksi.</td>
                 </tr>
               <?php endif; ?>
             </tbody>

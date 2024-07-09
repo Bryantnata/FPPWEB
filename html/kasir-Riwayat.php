@@ -93,16 +93,16 @@ mysqli_close($link);
                                 <th class="px-4 py-2 border">Nama Pemilik</th>
                                 <th class="px-4 py-2 border">Nama Barang</th>
                                 <th class="px-4 py-2 border">Keterangan Akhir</th>
-                                <th class="px-4 py-2 border">Aksi</th>
+                                <th class="px-4 py-2 border">Detail</th>
                             </tr>
                         </thead>
                         <tbody id="riwayatList">
                             <?php foreach ($riwayat as $index => $item) : ?>
                                 <tr>
-                                    <td class="px-4 py-2 border"><?php echo $start + $index + 1; ?></td>
-                                    <td class="px-4 py-2 border"><?php echo date('d-m-Y', strtotime($item['tanggal_masuk'])); ?></td>
+                                    <td class="px-4 py-2 border text-center"><?php echo $start + $index + 1; ?></td>
+                                    <td class="px-4 py-2 border "><?php echo date('d-m-Y', strtotime($item['tanggal_masuk'])); ?></td>
                                     <td class="px-4 py-2 border"><?php echo date('d-m-Y', strtotime($item['tanggal_keluar'])); ?></td>
-                                    <td class="px-4 py-2 border"><?php echo $item['id_service']; ?></td>
+                                    <td class="px-4 py-2 border text-center"><?php echo $item['id_service']; ?></td>
                                     <td class="px-4 py-2 border"><?php echo $item['nama_pemilik']; ?></td>
                                     <td class="px-4 py-2 border"><?php echo $item['nama_barang']; ?></td>
                                     <td class="px-4 py-2 border"><?php echo $item['keterangan_akhir']; ?></td>

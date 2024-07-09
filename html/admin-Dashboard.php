@@ -17,7 +17,7 @@ function getCount($link, $query)
   }
   $row = mysqli_fetch_assoc($result);
   mysqli_free_result($result);
-  return $row['total'] ?? 0;
+  return $row['total'];  // Hapus ?? 0
 }
 
 // Dapatkan total pendapatan
@@ -33,9 +33,9 @@ $queryTotalRepairs = "SELECT COUNT(*) AS total FROM barang WHERE status = 'Seles
 $totalRepairs = getCount($link, $queryTotalRepairs);
 
 // Dapatkan rata-rata waktu perbaikan
-$queryAvgRepairTime = "SELECT AVG(TIMESTAMPDIFF(HOUR, tanggal_input, tanggal_selesai)) AS total FROM barang WHERE status = 'Selesai Diperbaiki'";
+$queryAvgRepairTime = "SELECT AVG(TIMESTAMPDIFF(SECOND, tanggal_input, tanggal_selesai)) AS total FROM barang WHERE status = 'Selesai Diperbaiki'";
 $avgRepairTime = getCount($link, $queryAvgRepairTime);
-$avgRepairTime = $avgRepairTime ? round($avgRepairTime, 2) : 0;
+$avgRepairTime = $avgRepairTime ? round($avgRepairTime) : 0; // Bulatkan ke detik terdekat
 
 // Dapatkan data barang keluar dengan total nominal
 $queryBarangKeluar = "SELECT bk.id_service, p.nama AS nama_pemilik, b.nama_barang, 
@@ -106,7 +106,7 @@ mysqli_close($link);
     <h1 class="text-3xl font-bold mb-8 text-gray-800">Dashboard Admin</h1>
 
     <!-- Key Metrics -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
       <div class="bg-white p-6 rounded-lg shadow-md text-center">
         <h2 class="text-xl font-semibold mb-2 text-gray-700">Total Pendapatan</h2>
         <p class="text-3xl font-bold text-green-600">Rp<?php echo number_format($totalRevenue, 0, ',', '.'); ?></p>
@@ -119,10 +119,6 @@ mysqli_close($link);
         <h2 class="text-xl font-semibold mb-2 text-gray-700">Total Perbaikan</h2>
         <p class="text-3xl font-bold text-purple-600"><?php echo $totalRepairs; ?></p>
       </div>
-      <div class="bg-white p-6 rounded-lg shadow-md text-center">
-        <h2 class="text-xl font-semibold mb-2 text-gray-700">Rata-rata Waktu Perbaikan</h2>
-        <p class="text-3xl font-bold text-orange-600"><?php echo $avgRepairTime; ?> jam</p>
-      </div>
     </div>
 
     <!-- Daftar Barang Keluar -->
@@ -132,9 +128,9 @@ mysqli_close($link);
         <table class="w-full border-collapse">
           <thead>
             <tr class="bg-gray-200">
-              <th class="px-4 py-2 text-left text-gray-600">ID Barang</th>
-              <th class="px-4 py-2 text-left text-gray-600">Nama Pemilik</th>
-              <th class="px-4 py-2 text-left text-gray-600">Nama Barang</th>
+              <th class="px-4 py-2 text-center text-gray-600">ID Barang</th>
+              <th class="px-4 py-2 text-center text-gray-600">Nama Pemilik</th>
+              <th class="px-4 py-2 text-center text-gray-600">Nama Barang</th>
               <th class="px-4 py-2 text-right text-gray-600">Nominal Total</th>
             </tr>
           </thead>
@@ -143,9 +139,9 @@ mysqli_close($link);
             if (count($barangKeluar) > 0) {
               foreach ($barangKeluar as $item) {
                 echo "<tr class='border-b hover:bg-gray-50'>";
-                echo "<td class='px-4 py-2'>" . htmlspecialchars($item['id_service']) . "</td>";
-                echo "<td class='px-4 py-2'>" . htmlspecialchars($item['nama_pemilik']) . "</td>";
-                echo "<td class='px-4 py-2'>" . htmlspecialchars($item['nama_barang']) . "</td>";
+                echo "<td class='px-4 py-2 text-center'>" . htmlspecialchars($item['id_service']) . "</td>";
+                echo "<td class='px-4 py-2 text-center'>" . htmlspecialchars($item['nama_pemilik']) . "</td>";
+                echo "<td class='px-4 py-2 text-center'>" . htmlspecialchars($item['nama_barang']) . "</td>";
                 echo "<td class='px-4 py-2 text-right'>Rp " . number_format($item['nominal_total'], 0, ',', '.') . "</td>";
                 echo "</tr>";
               }
